@@ -1,0 +1,31 @@
+{% for stores in getStores() %}
+  {% render 'store', store: stores %}
+{% endfor %}
+{% schema %}
+{
+  "name": "Store",
+  "target": "section",
+  "stylesheet": "hcBopis.css",
+  "javascript": "hcBopis.js",
+  "settings": [
+    {
+      "type": "text",
+      "id": "store_name",
+      "label": "Store Name",
+      "default": "Demo Store"
+    },
+    {
+      "type": "text",
+      "id": "store_address",
+      "label": "Store Address",
+      "default": "Demo Address"
+    },
+    {
+      "type": "text",
+      "id": "store_timings",
+      "label": "Store Timings",
+      "default": "10 AM - 9 PM"
+    }
+  ]
+}
+{% endschema %}
