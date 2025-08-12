@@ -1,15 +1,17 @@
 {%- if block.settings.store_selector_display == "modal" -%}
-  <a
-  href="#"
+  <button
+  id="pickup-today-btn"
   class="btn button"
   style="
     background-color: {{ block.settings.background_color }};
     color: {{ block.settings.text_color }};
     padding: {{ block.settings.button_padding }};
     margin: {{ block.settings.button_margin }};
-  ">
-    {{ block.settings.button_text }}
-  </a>
+  "
+  data-enable-pickup="{{ block.settings.enable_pick_up }}"
+  onclick="showPickupModal({{ block.settings.enable_pick_up }})">
+    {{ block.settings.pick_up_button }}
+  </button>
 {%-  else -%}
   {%- render 'store', enablePickup: block.settings.enable_pick_up -%}
 {%- endif -%}
@@ -18,13 +20,9 @@
 {
   "name": "Pickup Button",
   "target": "section",
+  "stylesheet": "hcBopis.css",
+  "javascript": "hcBopis.js",
   "settings": [
-    {
-      "type": "text",
-      "id": "button_text",
-      "label": "Button Text",
-      "default": "Pickup"
-    },
     {
       "type": "color",
       "id": "background_color",

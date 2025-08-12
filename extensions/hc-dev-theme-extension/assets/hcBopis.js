@@ -51,3 +51,43 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
+function showPickupModal(enablePickup) {
+  const modal = document.getElementById('pickup-modal-embed');
+  if (!modal) return;
+
+  modal.style.display = 'block';
+
+  const container = document.getElementById('store-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+  
+  const stores = getStores();
+  stores.forEach(store => {
+    const storeActions = enablePickup
+      ? `<div class="store-actions">
+           <button id="pickup-btn" class="btn">Pickup Here</button>
+           <p>In Stock</p>
+         </div>`
+      : '';
+
+    const html = `
+      <div class="store">
+        <h3 class="store-name">${store.name}</h3>
+        <p>${store.address}</p>
+        <p>Open Today: ${store.timings}</p>
+      </div>
+      ${storeActions}
+      <hr class="custom-line">
+    `;
+    container.insertAdjacentHTML('beforeend', html.trim());
+  });
+}
+
+function closePickupModal() {
+  const modal = document.getElementById('pickup-modal-embed');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
