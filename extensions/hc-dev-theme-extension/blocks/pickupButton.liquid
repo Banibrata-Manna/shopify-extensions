@@ -1,4 +1,5 @@
-<a
+{%- if block.settings.store_selector_display == "modal" -%}
+  <a
   href="#"
   class="btn button"
   style="
@@ -6,10 +7,12 @@
     color: {{ block.settings.text_color }};
     padding: {{ block.settings.button_padding }};
     margin: {{ block.settings.button_margin }};
-  "
->
-  {{ block.settings.button_text }}
-</a>
+  ">
+    {{ block.settings.button_text }}
+  </a>
+{%-  else -%}
+  {%- render 'store', enablePickup: block.settings.enable_pick_up -%}
+{%- endif -%}
 
 {% schema %}
 {
