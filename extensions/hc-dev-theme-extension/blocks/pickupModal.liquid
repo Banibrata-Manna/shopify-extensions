@@ -17,19 +17,51 @@
         background:#fff; 
         padding:2rem; 
         border-radius:8px; 
-        min-width:300px; 
-        box-shadow:0 2px 16px rgba(0,0,0,0.2);
+        min-width:50%;
+        max-height:500px;
+        box-shadow:0 2px 16px rgba(0, 0, 0, 0);
+        overflow-y:auto;
         ">
     <button onclick="closePickupModal()" 
+      style="
+          position:absolute;
+          top:10px;
+          right:10px;
+          background:none;
+          border:none;
+          font-size:2rem;
+          cursor:pointer;
+      ">&times;</button>
+    <h2 style="text-align: center;">Pickup Today</h2>
+    <div class="pickup-modal__search"
+      style="
+        position:sticky;
+        top:0;
+        background:#fff;
+        display:flex; 
+        justify-content:space-between; 
+        align-items:center; 
+        margin-bottom:1rem;
+        gap:1rem;
+      ">
+      <input style="
+        height: 40px; width: auto;
+        flex: 1;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        font-size: 1rem;
+      " type="text" placeholder="Enter zipcode">
+      <button id="find-stores-btn" 
         style="
-            position:absolute;
-            top:10px;
-            right:10px;
-            background:none;
-            border:none;
-            font-size:2rem;
-            cursor:pointer;
-        ">&times;</button>
+          height: 40px; width:auto;
+          padding: 0.5rem 1rem;
+          background-color: #242222ff;
+          color: white;
+          border: none;
+          cursor: pointer;"
+      >Find Stores</button>
+    </div>
     {% render 'store' %}
   </div>
 </div>

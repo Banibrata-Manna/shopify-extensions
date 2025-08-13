@@ -1,0 +1,42 @@
+{% schema %}
+{
+  "name": "HotWax BOPIS",
+  "target": "section",
+  "stylesheet": "hcBopis.css",
+  "javascript": "hcBopis.js",
+  "enabled_on": {
+    "templates": ["*"],
+    "groups": ["header"]
+  },
+  "settings": [
+    {
+      "label": "My Store Label",
+      "id": "my_store_label",
+      "type": "text",
+      "default": "My Store",
+      "info": "Label for my store in the header"
+    },
+    {
+      "label": "Include warehouse for pick up",
+      "id": "enable_pick_up_warehouse",
+      "type": "checkbox",
+      "default": false,
+      "info": "Control whether to display warehouses in the store selection list for pick up"
+    },
+    {
+      "label": "Show store weekly timing",
+      "id": "show_store_weekly_timings",
+      "type": "checkbox",
+      "default": false,
+      "info": "Control the UI to whether display the store weekly timing with the store information"
+    },
+    {
+      "label": "Include home store in search results",
+      "id": "show_homestore_search_result",
+      "type": "checkbox",
+      "default": false,
+      "info": "Include the selected home store in the search results, not recommended as the same store will be displayed twice once as a home store another in the search results."
+    }
+  ]
+}
+{% endschema %}

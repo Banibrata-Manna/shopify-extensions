@@ -6,31 +6,47 @@
 
 #store-list{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     justify-content: space-between;
 }
 
 .store {
     display: flex;
-    flex-direction: column;
-    gap: 0px;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.store-details {
+    flex: 1;
+    text-wrap: wrap;
+    max-width: 60%;
+}
+
+.store-inv-contacts {
+    flex: 1;
+    text-wrap: wrap;
+    max-width: 40%;
+    text-align: start;
 }
 
 #pickup-btn {
-    background-color: #0f8842;
-    color: white;
-    border: none;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: 1px solid rgb(0, 0, 0);
     cursor: pointer;
-    padding: 10px 24px;
+    padding: 10px 40%;
+    text-wrap: nowrap;
     font-size: 16px;
+    margin-bottom: 2rem;
 }
 
 .store-actions {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    align-items: end;
+    align-items: center;
     justify-content: center;
 }
 
