@@ -1,3 +1,7 @@
+{% render 'storeListPagination' mode: {{ mode }} %}
 <div id="store-list"
+    data-store-selector-display={{ storeSelectorDisplay }}
     data-show-pickup-here={{ enablePickup }}
+    data-max-stores-display={{ maxStoreDisplay }}
+    data-store-proximity={{ storeProximity }}
 ></div>
