@@ -7,13 +7,14 @@
     color: {{ block.settings.text_color }};
     padding: {{ block.settings.button_padding }};
     margin: {{ block.settings.button_margin }};
+    text-wrap: nowrap;
   "
   data-enable-pickup="{{ block.settings.enable_pick_up }}"
-  onclick="showPickupModal({{ block.settings.enable_pick_up }})">
+  onclick="showPickupModal({{ block.settings.enable_pick_up }}, {{ block.settings.max_store_display }}, {{ block.settings.store_proximity }})">
     {{ block.settings.pick_up_button }}
   </button>
 {%-  else -%}
-  {%- render 'store', enablePickup: block.settings.enable_pick_up -%}
+  {%- render 'store', storeSelectorDisplay: block.settings.store_selector_display, enablePickup: block.settings.enable_pick_up, maxStoreDisplay: block.settings.max_store_display, storeProximity: block.settings.store_proximity -%}
 {%- endif -%}
 
 {% schema %}
@@ -120,6 +121,13 @@
       "type": "checkbox",
       "default": false,
       "info": "Include the selected home store in the search results, not recommended as the same store will be displayed twice once as a home store another in the search results."
+    },
+    {
+      "label": "Configure the max number of stores to display",
+      "id": "max_store_display",
+      "type": "number",
+      "default": 5,
+      "info": "Set the maximum number of stores to display in the Inline Store List or Modal."
     }
   ],
   "enabled_on": {

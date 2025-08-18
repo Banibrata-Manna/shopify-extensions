@@ -18,6 +18,7 @@
         padding:2rem; 
         border-radius:8px; 
         min-width:50%;
+        min-height:500px;
         max-height:500px;
         box-shadow:0 2px 16px rgba(0, 0, 0, 0);
         overflow-y:auto;
@@ -44,7 +45,8 @@
         margin-bottom:1rem;
         gap:1rem;
       ">
-      <input style="
+      <input id="zipcode-input"
+        style="
         height: 40px; width: auto;
         flex: 1;
         padding: 0.5rem 0.75rem;
@@ -60,6 +62,7 @@
           color: white;
           border: none;
           cursor: pointer;"
+        onclick="searchStoresByZip(document.getElementById('zipcode-input').value)"
       >Find Stores</button>
     </div>
     {% render 'store' %}
