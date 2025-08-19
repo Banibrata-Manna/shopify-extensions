@@ -23,7 +23,7 @@ async function getStores(viewSize, viewIndex, point, distance) {
   }
 
   try {
-    const response = await fetch('https://dev-maarg.hotwax.io/rest/s1/api/stores', {
+    const response = await fetch('Maarg Store Lookup URL', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ async function getLatLon(zipcode) {
   }
   let lat, lon;
   try {
-    const response = await fetch(`https://dev-maarg.hotwax.io/rest/s1/api/geocode`, {
+    const response = await fetch(`Maarg Post Code Lookup URL`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ function addToCart(currentVariantId, quantity = 1) {
 }
 
 async function checkPickupInventory(payload) {
-  const response = await fetch('https://dev-maarg.hotwax.io/rest/s1/ofbiz-oms-usl/checkBopisInventory', {
+  const response = await fetch('Maarg BOPIS Inventory Check URL', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -185,8 +185,8 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
 
   payload.facilityIds = storeCodes;
   payload.internalNames = [selectedVariantId];
-  payload.productStoreId = 'STORE';
-  payload.inventoryGroupId = 'SHOPIFY_1';
+  payload.productStoreId = '<Product Store ID>';
+  payload.inventoryGroupId = '<Inventory Group ID>';
 
   const response = await checkPickupInventory(payload);
 
