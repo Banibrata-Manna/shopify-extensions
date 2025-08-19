@@ -23,7 +23,7 @@ async function getStores(viewSize, viewIndex, point, distance) {
   }
 
   try {
-    const response = await fetch('<storeLookup url of maarg instance>', {
+    const response = await fetch('https://dev-maarg.hotwax.io/rest/s1/api/stores', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ async function getLatLon(zipcode) {
   }
   let lat, lon;
   try {
-    const response = await fetch(`<post code Lookup url of maarg instance>`, {
+    const response = await fetch(`https://dev-maarg.hotwax.io/rest/s1/api/geocode`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -129,14 +129,78 @@ async function searchStoresByZip(zipcode) {
   await initializePagination(storeListContainer);
 }
 
-function addToCart() {
-  // Implement logic to add items to cart
+function addToCart(currentVariantId, quantity = 1) {
+  if (!currentVariantId) {
+    alert('No variant selected!');
+    return;
+  }
+  fetch('/cart/add.js', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({
+      items: [
+        {
+          id: currentVariantId,
+          quantity: quantity
+        }
+      ]
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    // TODO: Update cart UI
+    console.log('Added to cart:', data);
+  })
+  .catch(error => {
+    alert('Could not add to cart', error);
+  });
 }
 
-function checkInventory() {
-  // Implement logic to check inventory
-  // Function to use the checkBopisInventory api for checking the inventory for the currently selected product variant and the stores
+async function checkPickupInventory(payload) {
+  const response = await fetch('https://dev-maarg.hotwax.io/rest/s1/ofbiz-oms-usl/checkBopisInventory', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+  return data;
 }
+
+async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
+  let checkBopisInventoryResult = [];
+  let storeCodes = [];
+  let storesWithInventory = [];
+  stores.forEach(
+    store => {
+      storeCodes.push(store.storeCode);
+    }
+  );
+  const payload = {};
+
+  payload.facilityIds = storeCodes;
+  payload.internalNames = [selectedVariantId];
+  payload.productStoreId = 'STORE';
+  payload.inventoryGroupId = 'SHOPIFY_1';
+
+  const response = await checkPickupInventory(payload);
+
+  if (response && response.resultList) {
+    checkBopisInventoryResult = response.resultList;
+    checkBopisInventoryResult.forEach(inv => {
+      if (inv.computedAtp > 0) {
+        storesWithInventory.push(inv.facilityId);
+      }
+    });
+  }
+  return storesWithInventory;
+}
+
 async function generateStoreListHTML(container) {
   if (!container) return;
   const enablePickup = Boolean(container.dataset.showPickupHere);
@@ -144,11 +208,16 @@ async function generateStoreListHTML(container) {
   // Clear any previous store listings
   container.innerHTML = '';
 
-  const storeActions = enablePickup
-      ? `<div class="store-actions">
-           <button id="pickup-btn" class="btn">Pickup Here</button>
-         </div>`
-      : '';
+  console.log("This is the Variant ID : ", container.dataset.productId);
+const storeActions = enablePickup
+  ? `<div class="store-actions">
+       <button id="pickup-btn" class="btn"
+         onClick="addToCart(${Number(container.dataset.productId)}, 1)">
+         Pickup Here
+       </button>
+     </div>`
+  : '';
+
 
   const viewIndex = container.dataset.viewIndex;
   const maxStoresToShow = parseInt(container.dataset.maxStoresDisplay, 10) || 5;
@@ -157,6 +226,17 @@ async function generateStoreListHTML(container) {
   const storesFound = response.storesFound;
   container.dataset.totalPages = Math.ceil(storesFound / maxStoresToShow);
 
+  if (storesFound === 0) {
+    container.innerHTML = '<p>No stores found</p>';
+    // const pagination = document.querySelector('#pagination');
+    // if (pagination) {
+    //   pagination.style.display = 'none';
+    // }
+    return;
+  }
+
+  const storesWithInventory = await filterStoresByInventoryAvailability(stores, container.dataset.productSku);
+  console.log("Stores with inventory: ", storesWithInventory);
   stores.forEach(store => {
   const storeName = store.storeName || '';
   const address1 = store.address1 || '';
@@ -165,6 +245,7 @@ async function generateStoreListHTML(container) {
   const countryCode = store.countryCode || '';
   const phone = store.storePhone || 'Phone Number Not Available';
   const timings = getStoreTimings(store);
+  const inStock = storesWithInventory?.includes(store.storeCode);
 
   const html = `
     <div class="store">
@@ -174,12 +255,12 @@ async function generateStoreListHTML(container) {
         ${(city || postalCode || countryCode) ? `<p>${[city, postalCode, countryCode].filter(Boolean).join(', ')}</p>` : ''}
       </div>
       <div class="store-inv-contacts">
-        <p>In Stock</p>
+        <p>${inStock ? 'In Stock' : 'Out of Stock'}</p>
         ${phone ? `<p>Phone: ${phone}</p>` : ''}
         ${timings ? `<p>Open Today: ${timings}</p>` : ''}
       </div>
     </div>
-    ${storeActions}
+    ${inStock ? storeActions : ''}
     <hr class="custom-line">
   `;
 
@@ -194,6 +275,18 @@ document.addEventListener('DOMContentLoaded', async function () {
       await generateStoreListHTML(container);
       await initializePagination(container);
     }
+});
+
+document.addEventListener('shopify:variant:changed', function(event) {
+  const selectedVariant = event.detail.variant;
+  const container = document.getElementById('store-list');
+  console.log("Selected variant changed: ", selectedVariant?.id);
+
+  if (container && selectedVariant) {
+    container.dataset.productId = selectedVariant.id;
+    container.dataset.productSku = selectedVariant.sku;
+    container.dataset.productTitle = selectedVariant.title;
+  }
 });
 
 async function showPickupModal(enablePickup, maxStoresToShow, storeProximity) {
@@ -252,6 +345,7 @@ async function initializePagination(container) {
 
   document.getElementById('prev-page').addEventListener('click', container._prevHandler);
   document.getElementById('next-page').addEventListener('click', container._nextHandler);
+  // document.getElementById('pagination').style.display = 'flex';
 }
 
 function closePickupModal() {
