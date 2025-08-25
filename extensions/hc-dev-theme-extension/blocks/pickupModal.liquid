@@ -54,6 +54,7 @@
         border-radius: 2px;
         font-size: 1rem;
       " type="text" placeholder="Enter zipcode">
+      <img id="location-icon" src="{{ 'icon-map-pin.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
       <button id="find-stores-btn" 
         style="
           height: 40px; width:auto;
@@ -68,6 +69,26 @@
     {% render 'store' %}
   </div>
 </div>
+<script>
+  document.getElementById('location-icon')
+    .addEventListener('click', async () => {
+      if (document.getElementById('location-icon').dataset.picklocation === 'true') {
+        document.getElementById('location-icon').dataset.picklocation = 'false';
+        resetStoreList();
+        const container = document.getElementById('store-list');
+        container.dataset.point = '';
+        generateStoreListHTML(container);
+        initializePagination(container);
+        return;
+      }
+      document.getElementById('location-icon').dataset.picklocation = 'true';
+      console.log('Location icon clicked');
+      const position = await getCurrentLocation();
+
+      console.log(`Current location - Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`);
+      searchStoresByLocation(position.coords.latitude, position.coords.longitude);
+    });
+</script>
 {% schema %}
 {
   "name": "Pickup Modal",

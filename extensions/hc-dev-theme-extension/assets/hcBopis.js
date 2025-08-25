@@ -1,20 +1,30 @@
 // TODO: Implement Searching Stores by partial zipcode.
-async function getStores(viewSize, viewIndex, point, distance) {
+async function getStores(viewSize, viewIndex, point, distance, includeWarehouse) {
   let stores = [];
   let storesFound;
   let requestBody = {};
   try {
-  if (!point) {
-    const position = await getCurrentLocation();
-    point = `${position.coords.latitude},${position.coords.longitude}`;
+  if (point) {
+    // const position = await getCurrentLocation();
+    // point = `${position.coords.latitude},${position.coords.longitude}`;
+    requestBody.point = point;
+
+    if (distance) {
+      requestBody.distance = distance;
+    }
   }
-  if (distance) {
-    requestBody.distance = distance;
+  if (viewSize) {
+    requestBody.viewSize = viewSize;
+    if (viewIndex) {
+      requestBody.viewIndex = viewIndex;
+    }
   }
-  requestBody.viewSize = viewSize;
-  requestBody.viewIndex = viewIndex;
-  requestBody.point = point;
-  requestBody.filters = ["pickup_pref: true", "storeType: RETAIL_STORE"];
+  requestBody.filters = ["pickup_pref: true"];
+  if (includeWarehouse === 'true') {
+    requestBody.filters.push("storeType: (RETAIL_STORE OR WAREHOUSE OR OUTLET_WAREHOUSE)");
+  } else {
+    requestBody.filters.push("storeType: RETAIL_STORE");
+  }
   requestBody.sortBy = "storeName asc";
 
   } catch (error) {
@@ -70,6 +80,7 @@ function getStoreTimings(store) {
 
 
 function getCurrentLocation() {
+  console.log('Getting current location...');
   return new Promise((resolve, reject) => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(resolve, reject);
@@ -115,8 +126,8 @@ async function getLatLon(zipcode) {
   return { lat, lon };
 }
 
-async function searchStoresByZip(zipcode) {
-  const { lat, lon } = await getLatLon(zipcode);
+async function searchStoresByLocation(lat, lon) {
+  console.log(`Searching stores by location - Latitude: ${lat}, Longitude: ${lon}`);
   resetStoreList();
   if (!lat || !lon) {
     return;
@@ -129,7 +140,12 @@ async function searchStoresByZip(zipcode) {
   await initializePagination(storeListContainer);
 }
 
-function addToCart(currentVariantId, quantity = 1) {
+async function searchStoresByZip(zipcode) {
+  const { lat, lon } = await getLatLon(zipcode);
+  await searchStoresByLocation(lat, lon);
+}
+
+function addToCart(currentVariantId, quantity = 1, properties) {
   if (!currentVariantId) {
     alert('No variant selected!');
     return;
@@ -144,7 +160,8 @@ function addToCart(currentVariantId, quantity = 1) {
       items: [
         {
           id: currentVariantId,
-          quantity: quantity
+          quantity: quantity,
+          properties: properties
         }
       ]
     })
@@ -153,9 +170,13 @@ function addToCart(currentVariantId, quantity = 1) {
   .then(data => {
     // TODO: Update cart UI
     console.log('Added to cart:', data);
+    return fetch('/cart.js');
+  })
+  .then(cart => {
+    window.location.href = '/cart';
   })
   .catch(error => {
-    alert('Could not add to cart', error);
+    console.log("Error adding to cart:", error);
   });
 }
 
@@ -185,8 +206,8 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
 
   payload.facilityIds = storeCodes;
   payload.internalNames = [selectedVariantId];
-  payload.productStoreId = '<Product Store ID>';
-  payload.inventoryGroupId = '<Inventory Group ID>';
+  payload.productStoreId = 'STORE';
+  payload.inventoryGroupId = 'SHOPIFY_1';
 
   const response = await checkPickupInventory(payload);
 
@@ -208,26 +229,26 @@ async function generateStoreListHTML(container) {
   // Clear any previous store listings
   container.innerHTML = '';
 
-  console.log("This is the Variant ID : ", container.dataset.productId);
-const storeActions = enablePickup
-  ? `<div class="store-actions">
-       <button id="pickup-btn" class="btn"
-         onClick="addToCart(${Number(container.dataset.productId)}, 1)">
-         Pickup Here
-       </button>
-     </div>`
-  : '';
+  // console.log("This is the Variant ID : ", container.dataset.productId);
+  // console.log("This is the Product SKU : ", container.dataset.productSku);
+  // console.log("This is the Pickup Item Property : ", container.dataset.pickupItemProperty);
+  // console.log("This is Pickup Item Property Label: ", container.dataset.pickupItemPropertyLabel);
+  console.log("This is the point: ", container.dataset.point);
+  const pickupItemProperty = Boolean(container.dataset.pickupItemProperty);
+  const pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
+  const showOutOfStockStores = container.dataset.showOutOfStockStores === 'true';
 
+  console.log("This is the Show Out Of Stock Stores: ", showOutOfStockStores, " and ", container.dataset.showOutOfStockStores);
 
   const viewIndex = container.dataset.viewIndex;
   const maxStoresToShow = parseInt(container.dataset.maxStoresDisplay, 10) || 5;
-  const response = await getStores(maxStoresToShow, viewIndex, container.dataset.point, container.dataset.storeProximity);
+  const response = await getStores(maxStoresToShow, viewIndex, container.dataset.point, container.dataset.storeProximity, container.dataset.includeWarehouse);
   const stores = response.stores;
   const storesFound = response.storesFound;
   container.dataset.totalPages = Math.ceil(storesFound / maxStoresToShow);
 
   if (storesFound === 0) {
-    container.innerHTML = '<p>No stores found</p>';
+    container.innerHTML = '<p style="text-align: center;">No stores found</p>';
     // const pagination = document.querySelector('#pagination');
     // if (pagination) {
     //   pagination.style.display = 'none';
@@ -236,36 +257,66 @@ const storeActions = enablePickup
   }
 
   const storesWithInventory = await filterStoresByInventoryAvailability(stores, container.dataset.productSku);
+  // container.dataset.totalPages = Math.ceil(storesWithInventory.length / maxStoresToShow);
+  console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory.length);
+  // console.log("Total pages: ", container.dataset.totalPages);
+
+  const storeActions = enablePickup
+  ? `<div class="store-actions">
+       <button id="pickup-btn" class="btn">
+         Pickup Here
+       </button>
+     </div>`
+  : '';
+
   console.log("Stores with inventory: ", storesWithInventory);
   stores.forEach(store => {
-  const storeName = store.storeName || '';
-  const address1 = store.address1 || '';
-  const city = store.city || '';
-  const postalCode = store.postalCode || '';
-  const countryCode = store.countryCode || '';
-  const phone = store.storePhone || 'Phone Number Not Available';
-  const timings = getStoreTimings(store);
-  const inStock = storesWithInventory?.includes(store.storeCode);
+    const inStock = storesWithInventory?.includes(store.storeCode);
+    // console.log(`Store: ${store.storeCode}, showOutOfStockStores: ${showOutOfStockStores}, In Stock: ${inStock}`);
+    // if (!inStock && !showOutOfStockStores) {
+    //   return;
+    // }
+    const storeName = store.storeName || '';
+    const address1 = store.address1 || '';
+    const city = store.city || '';
+    const postalCode = store.postalCode || '';
+    const countryCode = store.countryCode || '';
+    const phone = store.storePhone || 'Phone Number Not Available';
+    const timings = getStoreTimings(store);
 
-  const html = `
-    <div class="store">
-      <div class="store-details">
-        ${storeName ? `<h3 class="store-name">${storeName}</h3>` : ''}
-        ${address1 ? `<p>${address1}</p>` : ''}
-        ${(city || postalCode || countryCode) ? `<p>${[city, postalCode, countryCode].filter(Boolean).join(', ')}</p>` : ''}
-      </div>
-      <div class="store-inv-contacts">
-        <p>${inStock ? 'In Stock' : 'Out of Stock'}</p>
-        ${phone ? `<p>Phone: ${phone}</p>` : ''}
-        ${timings ? `<p>Open Today: ${timings}</p>` : ''}
-      </div>
-    </div>
-    ${inStock ? storeActions : ''}
-    <hr class="custom-line">
-  `;
+    let properties = {
+      "_pickupstore": store.storeCode
+    };
 
-  container.insertAdjacentHTML('beforeend', html);
-});
+    const html = `
+      <div class="store">
+        <div class="store-details">
+          ${storeName ? `<h3 class="store-name">${storeName}</h3>` : ''}
+          ${address1 ? `<p>${address1}</p>` : ''}
+          ${(city || postalCode || countryCode) ? `<p>${[city, postalCode, countryCode].filter(Boolean).join(', ')}</p>` : ''}
+        </div>
+        <div class="store-inv-contacts">
+          <p>${inStock ? 'In Stock' : 'Out of Stock'}</p>
+          ${phone ? `<p>Phone: ${phone}</p>` : ''}
+          ${timings ? `<p>Open Today: ${timings}</p>` : ''}
+        </div>
+      </div>
+      ${inStock ? storeActions : ''}
+      <hr class="custom-line">
+    `;
+
+    container.insertAdjacentHTML('beforeend', html);
+
+    if (enablePickup && inStock) {
+      container.querySelector("#pickup-btn").addEventListener("click", addToCartListener = () => {
+        if (pickupItemProperty) {
+          (city || address1 || storeName) ? properties[pickupItemPropertyLabel] = [storeName, address1, city].filter(Boolean).join(', ') : '';
+          console.log("These are properties added : ",properties);
+        }
+        addToCart(Number(container.dataset.productId), 1, properties);
+      });
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', async function () {    
@@ -277,19 +328,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
-document.addEventListener('shopify:variant:changed', function(event) {
-  const selectedVariant = event.detail.variant;
+document.addEventListener('change', function(event) {
+  // TODO: Find a way to get the selected variant's SKU, either save it on the very start.
+  const selectedVariantId = event?.target?.defaultValue; // This is only the variant ID
   const container = document.getElementById('store-list');
-  console.log("Selected variant changed: ", selectedVariant?.id);
+  console.log("Selected variant changed: ", selectedVariantId);
 
-  if (container && selectedVariant) {
-    container.dataset.productId = selectedVariant.id;
-    container.dataset.productSku = selectedVariant.sku;
-    container.dataset.productTitle = selectedVariant.title;
+  if (container && selectedVariantId) {
+    container.dataset.productId = selectedVariantId;
+    // container.dataset.productSku = selectedVariant;
+    // container.dataset.productTitle = selectedVariant;
   }
 });
 
-async function showPickupModal(enablePickup, maxStoresToShow, storeProximity) {
+async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pickupItemProperty, pickupItemPropertyLabel, showOutOfStockStores, includeWarehouse) {
   const modal = document.getElementById('pickup-modal-embed');
   if (!modal) return;
 
@@ -304,6 +356,11 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity) {
   container.dataset.viewIndex = 0;
   container.dataset.storeSelectorDisplay = 'modal';
   container.dataset.storeProximity = storeProximity;
+  container.dataset.pickupItemProperty = pickupItemProperty;
+  container.dataset.pickupItemPropertyLabel = pickupItemPropertyLabel;
+  container.dataset.showOutOfStockStores = showOutOfStockStores;
+  container.dataset.includeWarehouse = includeWarehouse;
+  console.log("This is the Show Out Of Stock Stores: ", showOutOfStockStores);
 
   await generateStoreListHTML(container);
   await initializePagination(container);

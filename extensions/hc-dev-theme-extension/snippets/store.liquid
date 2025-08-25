@@ -4,7 +4,11 @@
     data-show-pickup-here={{ enablePickup }}
     data-max-stores-display={{ maxStoreDisplay }}
     data-store-proximity={{ storeProximity }}
-    data-product-id="{{ product.selected_variant.id }}"
+    data-product-id="{{ product.selected_or_first_available_variant.id }}"
     data-product-title="{{ product.title }}"
-    data-product-sku="{{ product.selected_variant.sku }}"
-></div>
+    data-product-sku="{{ product.selected_or_first_available_variant.sku }}"
+    data-pickup-item-property={{ pickupItemProperty }}
+    data-pickup-item-property-label={{ pickupItemPropertyLabel }}
+    data-show-out-of-stock-stores={{ showOutOfStockStores }}
+    data-include-warehouse={{ includeWarehouse }}>
+</div>
