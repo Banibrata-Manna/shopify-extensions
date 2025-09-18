@@ -6,10 +6,15 @@
     background-color: {{ block.settings.background_color }};
     color: {{ block.settings.text_color }};
     padding: {{ block.settings.button_padding }};
+    width: {{ block.settings.button_width }};
     margin: {{ block.settings.button_margin }};
     text-wrap: nowrap;
   "
   data-enable-pickup="{{ block.settings.enable_pick_up }}"
+  data-hc-variants='{{ product.variants | json }}'
+  data-product-id="{{ product.selected_or_first_available_variant.id }}"
+  data-product-sku="{{ product.selected_or_first_available_variant.sku }}"
+  data-product-title="{{ product.selected_or_first_available_variant.title }}"
   onclick="showPickupModal({{ block.settings.enable_pick_up }}, {{ block.settings.max_store_display }}, {{ block.settings.store_proximity }}, {{ block.settings.pickup_item_property }}, '{{ block.settings.pickup_item_property_label }}', '{{ block.settings.show_out_of_stock_stores }}', '{{ block.settings.enable_pick_up_warehouse }}')">
     {{ block.settings.pick_up_button }}
   </button>
@@ -40,9 +45,9 @@
     },
     {
       "type": "text",
-      "id": "button_padding",
-      "label": "Button Padding",
-      "default": "10px 5px"
+      "id": "button_width",
+      "label": "Button Width",
+      "default": "50%"
     },
     {
       "type": "text",
