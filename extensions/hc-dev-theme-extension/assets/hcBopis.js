@@ -1,3 +1,28 @@
+let PRODUCT_VARIANTS = [];
+
+const PICKUP_TODAY_BTN = document.getElementById('pickup-today-btn');
+
+const STORE_LIST = document.getElementById('store-list');
+
+const STORE_LIST_PAGINATION = document.getElementById('pagination');
+
+async function fetchProductVariantById(shopifyVariantId) {
+  console.log("Fetching variant by ID: ", shopifyVariantId);
+  if (!PRODUCT_VARIANTS) {
+    console.log("Product Variants not initialized!");
+    return null;
+  }
+  console.log("Available Product Variants: ", PRODUCT_VARIANTS);
+  const variant = PRODUCT_VARIANTS.find(variant => variant.id == shopifyVariantId);
+  return variant;
+}
+
+async function isVariantAvailable(shopifyVariantId) {
+  const variant = await fetchProductVariantById(shopifyVariantId);
+  console.log("*****************************This is the variant availability: ", variant?.available);
+  return variant?.available;
+}
+
 // TODO: Implement Searching Stores by partial zipcode.
 async function getStores(viewSize, viewIndex, point, distance, includeWarehouse) {
   let stores = [];
@@ -33,7 +58,7 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse)
   }
 
   try {
-    const response = await fetch('Maarg Store Lookup URL', {
+    const response = await fetch('https://dev-maarg.hotwax.io/rest/s1/api/stores', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -102,7 +127,7 @@ async function getLatLon(zipcode) {
   }
   let lat, lon;
   try {
-    const response = await fetch(`Maarg Post Code Lookup URL`, {
+    const response = await fetch(`https://dev-maarg.hotwax.io/rest/s1/api/geocode`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +157,7 @@ async function searchStoresByLocation(lat, lon) {
   if (!lat || !lon) {
     return;
   }
-  const storeListContainer = document.getElementById('store-list');
+  const storeListContainer = STORE_LIST;
   if (!storeListContainer) return;
   storeListContainer.dataset.point = `${lat},${lon}`;
   storeListContainer.dataset.viewIndex = 0;
@@ -181,7 +206,7 @@ function addToCart(currentVariantId, quantity = 1, properties) {
 }
 
 async function checkPickupInventory(payload) {
-  const response = await fetch('Maarg BOPIS Inventory Check URL', {
+  const response = await fetch('https://dev-maarg.hotwax.io/rest/s1/ofbiz-oms-usl/checkBopisInventory', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -229,16 +254,11 @@ async function generateStoreListHTML(container) {
   // Clear any previous store listings
   container.innerHTML = '';
 
-  // console.log("This is the Variant ID : ", container.dataset.productId);
-  // console.log("This is the Product SKU : ", container.dataset.productSku);
-  // console.log("This is the Pickup Item Property : ", container.dataset.pickupItemProperty);
-  // console.log("This is Pickup Item Property Label: ", container.dataset.pickupItemPropertyLabel);
   console.log("This is the point: ", container.dataset.point);
   const pickupItemProperty = Boolean(container.dataset.pickupItemProperty);
   const pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
   const showOutOfStockStores = container.dataset.showOutOfStockStores === 'true';
 
-  console.log("This is the Show Out Of Stock Stores: ", showOutOfStockStores, " and ", container.dataset.showOutOfStockStores);
 
   const viewIndex = container.dataset.viewIndex;
   const maxStoresToShow = parseInt(container.dataset.maxStoresDisplay, 10) || 5;
@@ -246,20 +266,18 @@ async function generateStoreListHTML(container) {
   const stores = response.stores;
   const storesFound = response.storesFound;
   container.dataset.totalPages = Math.ceil(storesFound / maxStoresToShow);
+  console.log("This is number of total pages: ", container.dataset.totalPages);
 
   if (storesFound === 0) {
     container.innerHTML = '<p style="text-align: center;">No stores found</p>';
-    // const pagination = document.querySelector('#pagination');
-    // if (pagination) {
-    //   pagination.style.display = 'none';
-    // }
+      STORE_LIST_PAGINATION.style.display = 'none';
     return;
   }
 
+  STORE_LIST_PAGINATION.style.display = 'flex';
+
   const storesWithInventory = await filterStoresByInventoryAvailability(stores, container.dataset.productSku);
-  // container.dataset.totalPages = Math.ceil(storesWithInventory.length / maxStoresToShow);
-  console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory.length);
-  // console.log("Total pages: ", container.dataset.totalPages);
+  console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory);
 
   const storeActions = enablePickup
   ? `<div class="store-actions">
@@ -269,13 +287,8 @@ async function generateStoreListHTML(container) {
      </div>`
   : '';
 
-  console.log("Stores with inventory: ", storesWithInventory);
   stores.forEach(store => {
     const inStock = storesWithInventory?.includes(store.storeCode);
-    // console.log(`Store: ${store.storeCode}, showOutOfStockStores: ${showOutOfStockStores}, In Stock: ${inStock}`);
-    // if (!inStock && !showOutOfStockStores) {
-    //   return;
-    // }
     const storeName = store.storeName || '';
     const address1 = store.address1 || '';
     const city = store.city || '';
@@ -311,7 +324,6 @@ async function generateStoreListHTML(container) {
       container.querySelector("#pickup-btn").addEventListener("click", addToCartListener = () => {
         if (pickupItemProperty) {
           (city || address1 || storeName) ? properties[pickupItemPropertyLabel] = [storeName, address1, city].filter(Boolean).join(', ') : '';
-          console.log("These are properties added : ",properties);
         }
         addToCart(Number(container.dataset.productId), 1, properties);
       });
@@ -319,25 +331,63 @@ async function generateStoreListHTML(container) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', async function () {    
-    var container = document.getElementById('store-list');
-    if (container && container.dataset.storeSelectorDisplay === 'inline') {
-      container.dataset.viewIndex = 0;
-      await generateStoreListHTML(container);
-      await initializePagination(container);
+document.addEventListener('DOMContentLoaded', async function () {
+  let container = PICKUP_TODAY_BTN || STORE_LIST;
+
+  if (container) {
+    let isProdVariantAvailable = false;
+    PRODUCT_VARIANTS = JSON.parse(container.dataset.hcVariants);
+    if (PRODUCT_VARIANTS) {
+      isProdVariantAvailable = await isVariantAvailable(container.dataset.productId);
     }
+    if (isProdVariantAvailable) {
+      container.style.display = 'block';
+      STORE_LIST_PAGINATION.style.display = 'flex';
+      if (container.dataset.storeSelectorDisplay === 'inline') {
+        container.dataset.viewIndex = 0;
+        await generateStoreListHTML(container);
+        await initializePagination(container);
+      }
+    } else {
+      container.style.display = 'none';
+      STORE_LIST_PAGINATION.style.display = 'none';
+    }
+  }
 });
 
-document.addEventListener('change', function(event) {
+document.addEventListener('change', async function(event) {
   // TODO: Find a way to get the selected variant's SKU, either save it on the very start.
   const selectedVariantId = event?.target?.defaultValue; // This is only the variant ID
-  const container = document.getElementById('store-list');
-  console.log("Selected variant changed: ", selectedVariantId);
+  const container = PICKUP_TODAY_BTN || STORE_LIST;
 
   if (container && selectedVariantId) {
-    container.dataset.productId = selectedVariantId;
-    // container.dataset.productSku = selectedVariant;
-    // container.dataset.productTitle = selectedVariant;
+    const selectedVariant = await fetchProductVariantById(selectedVariantId);
+
+    if (PICKUP_TODAY_BTN) {
+      PICKUP_TODAY_BTN.dataset.productId = selectedVariant?.id;
+      PICKUP_TODAY_BTN.dataset.productSku = selectedVariant?.sku;
+      PICKUP_TODAY_BTN.dataset.productTitle = selectedVariant?.title;
+    }
+    
+    STORE_LIST.dataset.productId = selectedVariant?.id;
+    STORE_LIST.dataset.productSku = selectedVariant?.sku;
+    STORE_LIST.dataset.productTitle = selectedVariant?.title;
+
+    const isProdVariantAvailable = await isVariantAvailable(selectedVariant?.id);
+
+    if (isProdVariantAvailable) {
+      container.style.display = 'block';
+      if (container.dataset.storeSelectorDisplay === 'inline') {
+        resetStoreList();
+        await generateStoreListHTML(container);
+        await initializePagination(container);
+      }
+      STORE_LIST_PAGINATION.style.display = 'flex';
+    } else {
+      resetStoreList();
+      container.style.display = 'none';
+      STORE_LIST_PAGINATION.style.display = 'none';
+    }
   }
 });
 
@@ -347,7 +397,7 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pi
 
   modal.style.display = 'block';
 
-  const container = document.getElementById('store-list');
+  const container = STORE_LIST;
   if (!container) return;
 
   // TODO: These need to set while rendering the app-embed block instead
@@ -360,7 +410,6 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pi
   container.dataset.pickupItemPropertyLabel = pickupItemPropertyLabel;
   container.dataset.showOutOfStockStores = showOutOfStockStores;
   container.dataset.includeWarehouse = includeWarehouse;
-  console.log("This is the Show Out Of Stock Stores: ", showOutOfStockStores);
 
   await generateStoreListHTML(container);
   await initializePagination(container);
@@ -384,8 +433,12 @@ function makeNextHandler(container) {
   return async function(event) {
     let currentPage = parseInt(container.dataset.viewIndex, 10);
     let totalPages = parseInt(container.dataset.totalPages, 10);
+    currentPage++;
+    console.log("Total Pages: ", totalPages, " and current page: ", currentPage);
+    if (currentPage === totalPages) {
+      document.getElementById('next-page').disabled = true;
+    }
     if (currentPage < totalPages) {
-      currentPage++;
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
       container.dataset.viewIndex = currentPage;
       await generateStoreListHTML(container);
@@ -402,7 +455,6 @@ async function initializePagination(container) {
 
   document.getElementById('prev-page').addEventListener('click', container._prevHandler);
   document.getElementById('next-page').addEventListener('click', container._nextHandler);
-  // document.getElementById('pagination').style.display = 'flex';
 }
 
 function closePickupModal() {
@@ -421,7 +473,7 @@ function closePickupModal() {
 
 
 function resetStoreList() {
-  const container = document.getElementById('store-list');
+  const container = STORE_LIST;
   if (!container) return;
 
   container.dataset.viewIndex = 0;
