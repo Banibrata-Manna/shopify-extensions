@@ -1,60 +1,97 @@
 .store-name {
-    font-size: x-large;
-    font-weight: lighter;
-    padding: 0px 0px 0px 0px;
+  font-size: x-large;
+  font-weight: lighter;
+  padding: 0px 0px 0px 0px;
 }
 
 #store-list{
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .store {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .store-details {
-    flex: 1;
-    text-wrap: wrap;
-    max-width: 60%;
+  flex: 1;
+  text-wrap: wrap;
+  max-width: 60%;
 }
 
 .store-inv-contacts {
-    flex: 1;
-    text-wrap: wrap;
-    max-width: 40%;
-    text-align: start;
+  flex: 1;
+  text-wrap: wrap;
+  max-width: 40%;
+  text-align: start;
 }
 
 #pickup-btn {
-    background-color: #ffffff;
-    color: rgb(0, 0, 0);
-    border: 1px solid rgb(0, 0, 0);
-    cursor: pointer;
-    padding: 10px 40%;
-    text-wrap: nowrap;
-    font-size: 16px;
-    margin-bottom: 2rem;
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  border: 1px solid rgb(0, 0, 0);
+  cursor: pointer;
+  padding: 10px 40%;
+  text-wrap: nowrap;
+  font-size: 16px;
+  margin-bottom: 2rem;
 }
 
 .store-actions {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
 }
 
 .custom-line {
-    height: 1px;
-    background-color: rgb(201, 198, 198);
-    width: 100%;
-    margin: auto;
+  height: 1px;
+  background-color: rgb(201, 198, 198);
+  width: 100%;
+  margin: auto;
+}
+
+my-store {
+  display: flex;
+  flex-direction: row;
+  font-weight: bold;
+}
+
+#my-store-name {
+  cursor: pointer;
+}
+
+.hc-modal-embed {
+  display:none; 
+  position:fixed; 
+  top:0; 
+  left:0; 
+  width:100vw; 
+  height:100vh; 
+  background:rgba(0,0,0,0.5); 
+  z-index:9999;
+}
+
+.hc-modal {
+  position:absolute; 
+  top:50%; 
+  left:50%; 
+  transform:translate(-50%, -50%); 
+  background:#fff; 
+  padding:2rem; 
+  border-radius:8px; 
+  min-width:50%;
+  min-height:500px;
+  max-height:500px;
+  box-shadow:0 2px 16px rgba(0, 0, 0, 0);
+  overflow-y:auto;
+  scrollbar-width:none
 }
 
 /* .pickup-modal {
