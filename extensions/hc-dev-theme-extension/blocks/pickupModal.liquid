@@ -1,28 +1,5 @@
-<div id="pickup-modal-embed" 
-    style="
-        display:none; 
-        position:fixed; 
-        top:0; 
-        left:0; 
-        width:100vw; 
-        height:100vh; 
-        background:rgba(0,0,0,0.5); 
-        z-index:9999;">
-  <div 
-    style="
-        position:absolute; 
-        top:50%; 
-        left:50%; 
-        transform:translate(-50%, -50%); 
-        background:#fff; 
-        padding:2rem; 
-        border-radius:8px; 
-        min-width:50%;
-        min-height:500px;
-        max-height:500px;
-        box-shadow:0 2px 16px rgba(0, 0, 0, 0);
-        overflow-y:auto;
-        ">
+<div id="pickup-modal-embed"  class="hc-modal-embed">
+  <div class="hc-modal">
     <button onclick="closePickupModal()" 
       style="
           position:absolute;
@@ -34,46 +11,20 @@
           cursor:pointer;
       ">&times;</button>
     <h2 style="text-align: center;">Pickup Today</h2>
-    <div class="pickup-modal__search"
-      style="
-        position:sticky;
-        top:0;
-        background:#fff;
-        display:flex; 
-        justify-content:space-between; 
-        align-items:center; 
-        margin-bottom:1rem;
-        gap:1rem;
-      ">
-      <input id="zipcode-input"
-        style="
-        height: 40px; width: auto;
-        flex: 1;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #ccc;
-        border-radius: 2px;
-        font-size: 1rem;
-      " type="text" placeholder="Enter zipcode">
-      <img id="location-icon" src="{{ 'icon-map-pin.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
-      <button id="find-stores-btn" 
-        style="
-          height: 40px; width:auto;
-          padding: 0.5rem 1rem;
-          background-color: #242222ff;
-          color: white;
-          border: none;
-          cursor: pointer;"
-        onclick="searchStoresByZip(document.getElementById('zipcode-input').value)"
+    <div class="hc-pickup-modal__search">
+      <input id="pickup-modal-zipcode-input" class="hc-zipcode-input" type="text" placeholder="Enter zipcode">
+      <img id="hc-location-icon" src="{{ 'icon-map-pin.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
+      <button class="hc-modal-find-stores-btn" onclick="searchStoresByZip(document.getElementById('pickup-modal-zipcode-input').value)"
       >Find Stores</button>
     </div>
     {% render 'store' %}
   </div>
 </div>
 <script>
-  document.getElementById('location-icon')
+  document.getElementById('hc-location-icon')
     .addEventListener('click', async () => {
-      if (document.getElementById('location-icon').dataset.picklocation === 'true') {
-        document.getElementById('location-icon').dataset.picklocation = 'false';
+      if (document.getElementById('hc-location-icon').dataset.picklocation === 'true') {
+        document.getElementById('hc-location-icon').dataset.picklocation = 'false';
         resetStoreList();
         const container = document.getElementById('store-list');
         container.dataset.point = '';
@@ -81,7 +32,7 @@
         initializePagination(container);
         return;
       }
-      document.getElementById('location-icon').dataset.picklocation = 'true';
+      document.getElementById('hc-location-icon').dataset.picklocation = 'true';
       console.log('Location icon clicked');
       const position = await getCurrentLocation();
 

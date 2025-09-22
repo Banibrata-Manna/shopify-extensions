@@ -94,6 +94,35 @@ my-store {
   scrollbar-width:none
 }
 
+.hc-pickup-modal__search {
+  position:sticky;
+  top:0;
+  background:#fff;
+  display:flex; 
+  justify-content:space-between; 
+  align-items:center; 
+  margin-bottom:1rem;
+  gap:1rem;
+}
+
+.hc-zipcode-input {
+  height: 40px; width: auto;
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 1rem;
+}
+
+.hc-modal-find-stores-btn {
+  height: 40px; width:auto;
+  padding: 0.5rem 1rem;
+  background-color: #242222ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
 /* .pickup-modal {
   position: relative;
   top: 0; left: 0;
