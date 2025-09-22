@@ -1,5 +1,7 @@
 let PRODUCT_VARIANTS = [];
 
+let PICKUP_STORES = [];
+
 const PICKUP_TODAY_BTN = document.getElementById('pickup-today-btn');
 
 const STORE_LIST = document.getElementById('store-list');
@@ -23,8 +25,12 @@ async function isVariantAvailable(shopifyVariantId) {
   return variant?.available;
 }
 
+async function getAllPickupStores(point, distance, includeWarehouse) {
+  return await getStores(500, undefined, point, distance, includeWarehouse);
+}
+
 // TODO: Implement Searching Stores by partial zipcode.
-async function getStores(viewSize, viewIndex, point, distance, includeWarehouse) {
+async function getStores(viewSize, viewIndex, point, distance, includeWarehouse, filters = []) {
   let stores = [];
   let storesFound;
   let requestBody = {};
@@ -44,7 +50,9 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse)
       requestBody.viewIndex = viewIndex;
     }
   }
-  requestBody.filters = ["pickup_pref: true"];
+  filters.push("pickup_pref: true");
+
+  requestBody.filters = filters;
   if (includeWarehouse === 'true') {
     requestBody.filters.push("storeType: (RETAIL_STORE OR WAREHOUSE OR OUTLET_WAREHOUSE)");
   } else {
@@ -97,7 +105,7 @@ function getStoreTimings(store) {
   const close = store[`${dayName}_close`];
 
   if (!open || !close) {
-    return 'Store Timings Not Available';
+    return;
   }
 
   return `${formatTime24to12(open)} - ${formatTime24to12(close)}`;
@@ -311,7 +319,7 @@ async function generateStoreListHTML(container) {
         <div class="store-inv-contacts">
           <p>${inStock ? 'In Stock' : 'Out of Stock'}</p>
           ${phone ? `<p>Phone: ${phone}</p>` : ''}
-          ${timings ? `<p>Open Today: ${timings}</p>` : ''}
+          ${timings ? `<p>Open Today: ${timings}</p>` : 'Store Timings Not Available!'}
         </div>
       </div>
       ${inStock ? storeActions : ''}
@@ -462,7 +470,7 @@ function closePickupModal() {
   if (modal) {
     modal.style.display = "none";
     const searchBarInput = document.querySelector(
-      ".pickup-modal__search input"
+      ".hc-pickup-modal__search input"
     );
     if (searchBarInput) {
       searchBarInput.value = "";
@@ -491,3 +499,138 @@ function resetStoreList() {
   document.getElementById('prev-page')?.removeEventListener('click', container._prevHandler);
   document.getElementById('next-page')?.removeEventListener('click', container._nextHandler);
 }
+
+class MyStore extends HTMLElement {
+  constructor() {
+    super();
+    console.log("MyStore element created (constructor)");
+  }
+
+  connectedCallback() {
+    const labelDiv = this.querySelector('#my-store-label');
+    if (labelDiv) {
+      labelDiv.textContent = labelDiv.textContent + ' : ';
+    }
+
+    const storeId = this.dataset.storeId;
+    const customerId = this.dataset.customerId;
+
+    console.log("MyStore connected:", { storeId, customerId });
+
+    this.setMyStore();
+  }
+
+  disconnectedCallback() {
+    console.log("MyStore element removed from the DOM");
+  }
+
+  async getCustomerDefaultStore() {
+    try {
+      const response = await fetch(
+        `https://dev-oms.hotwax.io/api/getShopifyCustomerDefaultStore?customerId=${this.dataset.customerId}&shopifyShopId=${this.dataset.storeId}`
+      );
+
+      const resp = await response.json();
+      console.log("API response:", resp);
+
+      if (!resp?.customer?.facilityId) return;
+
+      const storeResponse = await getStores(
+        undefined, undefined, undefined, undefined, undefined,
+        [`storeCode: ${resp.customer.facilityId}`]
+      );
+
+      const store = storeResponse?.stores?.[0];
+      console.log("Default store:", store);
+      return store;
+
+    } catch (err) {
+      console.error("Error fetching customer default store:", err);
+      return null;
+    }
+  }
+
+  async setMyStore() {
+    const store = await this.getCustomerDefaultStore();
+    const myStoreDetailsWrapper = this.querySelector('#my-store-details');
+
+    if (!myStoreDetailsWrapper) {
+      console.warn("No #my-store-details wrapper found");
+      return;
+    }
+
+    if (!store) {
+      console.log("Store not found");
+      const storeSelectText = document.createElement('span');
+      storeSelectText.id = 'store-select';
+      storeSelectText.textContent = 'Select a Store';
+      storeSelectText.style.cursor = 'pointer';
+      myStoreDetailsWrapper.appendChild(storeSelectText);
+
+      storeSelectText.addEventListener('click', () => this.openMyStoreModal());
+      return;
+    }
+
+    this.dataset.storeCode = store.storeCode;
+    this.dataset.storeName = store.storeName;
+
+    console.log("Store code:", store.storeCode);
+    console.log("Store name:", store.storeName);
+
+    const storeNameDiv = document.createElement('span');
+    storeNameDiv.textContent = store.storeName;
+    myStoreDetailsWrapper.appendChild(storeNameDiv);
+
+    const timings = getStoreTimings(store);
+    console.log("Store timings:", timings);
+
+    if (timings) {
+      const storeTimingsDiv = document.createElement('span');
+      storeTimingsDiv.textContent = timings;
+      myStoreDetailsWrapper.appendChild(storeTimingsDiv);
+    }
+  }
+
+  openMyStoreModal() {
+    const modal = document.querySelector('my-store-modal');
+    if (modal) {
+      console.log("Here I am");
+      modal.style.display = 'block';
+    } else {
+      console.error("<my-store-modal> not found in DOM");
+    }
+  }
+}
+
+class MyStoreModal extends HTMLElement {
+  constructor() {
+    super();
+    this.style.display = 'none';
+  }
+
+  async connectedCallback() {
+    try {
+      const response = await getAllPickupStores();
+      console.log("Pickup stores:", response, " and ", response?.stores?.length);
+    } catch (err) {
+      console.error("Error fetching pickup stores:", err);
+    }
+  }
+
+  disconnectedCallback() {
+    console.log("MyStoreModal element removed from the DOM");
+  }
+
+  async setShopifyCustomerDefaultStore() {
+
+  }
+}
+
+if (!customElements.get("my-store")) {
+  customElements.define("my-store", MyStore);
+}
+
+if (!customElements.get("my-store-modal")) {
+  customElements.define("my-store-modal", MyStoreModal);
+}
+
