@@ -11,7 +11,7 @@
           cursor:pointer;
       ">&times;</button>
     <h2 style="text-align: center;">Pickup Today</h2>
-    <div class="hc-pickup-modal__search">
+    <div id="hc-pickup-modal__search" class="hc-modal__search">
       <input id="pickup-modal-zipcode-input" class="hc-zipcode-input" type="text" placeholder="Enter zipcode">
       <img id="hc-location-icon" src="{{ 'icon-map-pin.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
       <button class="hc-modal-find-stores-btn" onclick="searchStoresByZip(document.getElementById('pickup-modal-zipcode-input').value)"
