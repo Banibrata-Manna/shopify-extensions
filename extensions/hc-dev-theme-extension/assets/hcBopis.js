@@ -470,7 +470,7 @@ function closePickupModal() {
   if (modal) {
     modal.style.display = "none";
     const searchBarInput = document.querySelector(
-      ".hc-pickup-modal__search input"
+      "#hc-pickup-modal__search input"
     );
     if (searchBarInput) {
       searchBarInput.value = "";
@@ -498,6 +498,11 @@ function resetStoreList() {
   // Remove handlers using stored references
   document.getElementById('prev-page')?.removeEventListener('click', container._prevHandler);
   document.getElementById('next-page')?.removeEventListener('click', container._nextHandler);
+}
+
+function closeMyStoreModal() {
+  const myStoreModal = document.querySelector('my-store-modal');
+  myStoreModal.style.display = 'none';
 }
 
 class MyStore extends HTMLElement {
@@ -552,6 +557,7 @@ class MyStore extends HTMLElement {
 
   async setMyStore() {
     const store = await this.getCustomerDefaultStore();
+    localStorage.setItem("defaultStore", JSON.stringify(store));
     const myStoreDetailsWrapper = this.querySelector('#my-store-details');
 
     if (!myStoreDetailsWrapper) {
@@ -577,9 +583,10 @@ class MyStore extends HTMLElement {
     console.log("Store code:", store.storeCode);
     console.log("Store name:", store.storeName);
 
-    const storeNameDiv = document.createElement('span');
-    storeNameDiv.textContent = store.storeName;
-    myStoreDetailsWrapper.appendChild(storeNameDiv);
+    const storeName = document.createElement('span');
+    storeName.textContent = store.storeName;
+    storeName.style.cursor = 'pointer';
+    myStoreDetailsWrapper.appendChild(storeName);
 
     const timings = getStoreTimings(store);
     console.log("Store timings:", timings);
@@ -589,6 +596,8 @@ class MyStore extends HTMLElement {
       storeTimingsDiv.textContent = timings;
       myStoreDetailsWrapper.appendChild(storeTimingsDiv);
     }
+
+    storeName.addEventListener('click', () => this.openMyStoreModal());
   }
 
   openMyStoreModal() {
@@ -612,6 +621,48 @@ class MyStoreModal extends HTMLElement {
     try {
       const response = await getAllPickupStores();
       console.log("Pickup stores:", response, " and ", response?.stores?.length);
+
+      const stores = response?.stores;
+
+      const storeListDiv = document.createElement('div');
+      storeListDiv.classList.add('hc-store-list');
+
+      const modal = this.querySelector('#mystore-modal')
+      const myStore = JSON.parse(localStorage.getItem("defaultStore"));
+
+      console.log("This is my store", myStore); 
+
+      if (myStore) {
+        const myStoreHead = document.createElement('h3');
+        myStoreHead.textContent = 'My Store:';
+        myStoreHead.style.fontWeight = 'bold';
+
+        const defaultStore = this.createStoreDiv(myStore);
+        modal.prepend(defaultStore);
+        modal.prepend(myStoreHead);
+        const customLine = document.createElement('hr');
+        customLine.classList.add('custom-line');
+        customLine.style.marginBottom = "20px";
+        defaultStore.after(customLine);
+      }
+
+      stores.forEach(store => {
+        
+        const storeDiv = this.createStoreDiv(store);
+        storeListDiv.appendChild(storeDiv);
+
+        const customLine = document.createElement('hr');
+        customLine.classList.add('custom-line');
+        storeListDiv.appendChild(customLine);
+
+      });
+      const storeListHeadText = myStore ? 'Other Stores: ' : 'Select a Store: ';
+      const storeListHead = document.createElement('h3');
+      storeListHead.textContent = storeListHeadText;
+      storeListHead.style.fontWeight = "bold";
+      modal.appendChild(storeListDiv);
+      storeListDiv.before(storeListHead);
+      
     } catch (err) {
       console.error("Error fetching pickup stores:", err);
     }
@@ -623,6 +674,45 @@ class MyStoreModal extends HTMLElement {
 
   async setShopifyCustomerDefaultStore() {
 
+  }
+
+  createStoreDiv(store) {
+    const storeName = document.createElement('h3');
+    storeName.textContent = store.storeName;
+
+    const storeAddress = document.createElement('p');
+    storeAddress.textContent = store.address1;
+
+    const storeFullAddress = document.createElement('p')
+    storeFullAddress.textContent = [store.city, store.postalCode, store.countryCode].filter(Boolean).join(', ');
+
+    const storePhone = document.createElement('p');
+    storePhone.textContent = store.storePhone;
+
+    const storeTimings = document.createElement('p');
+    const timing = getStoreTimings(store);
+    storeTimings.textContent = `Open Today: ${timing || 'No Timings Available'}`;
+
+    const storeDetails = document.createElement('div');
+    storeDetails.classList.add('store-details');
+    storeDetails.appendChild(storeName);
+    storeDetails.appendChild(storeAddress);
+    storeDetails.appendChild(storeFullAddress);
+    const setStoreAction = document.createElement('u');
+    setStoreAction.textContent = (store.pickup_pref === 'true') ? 'SET AS MY STORE' : 'Pickup Not Available at this store';
+    storeDetails.appendChild(setStoreAction);
+
+    const storeContacts = document.createElement('div');
+    storeContacts.classList.add('store-inv-contacts');
+    storeContacts.appendChild(storePhone);
+    storeContacts.appendChild(storeTimings);
+
+    const storeDiv = document.createElement('div');
+    storeDiv.classList.add('store');
+    storeDiv.appendChild(storeDetails);
+    storeDiv.appendChild(storeContacts);
+
+    return storeDiv;
   }
 }
 
