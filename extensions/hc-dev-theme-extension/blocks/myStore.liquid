@@ -1,6 +1,22 @@
+<my-store
+  id="my-store"
+  data-customer-id='8749749502116'
+  data-customer='{{ customer.id }}'
+  data-customer-name='{{ customer.first_name }}'
+  data-customer-last-name='{{ customer.last_name }}'
+  data-store-id='{{ shop.id }}'
+  data-enable-warehouse-pickup='{{ block.settings.enable_pick_up_warehouse }}'
+  data-show-timings='{{ block.settings.show_store_weekly_timings }}'
+  data-show-my-store-in-search='{{ block.settings.show_homestore_search_result }}'
+>
+  <div id="my-store-label">
+    {{ block.settings.my_store_label }}
+  </div>
+  <div id="my-store-details"></div>
+</my-store>
 {% schema %}
 {
-  "name": "HotWax BOPIS",
+  "name": "My Store",
   "target": "section",
   "stylesheet": "hcBopis.css",
   "javascript": "hcBopis.js",
