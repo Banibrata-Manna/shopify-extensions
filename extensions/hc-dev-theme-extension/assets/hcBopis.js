@@ -560,14 +560,14 @@ class MyStore extends HTMLElement {
   }
 
   async setMyStore() {
-    const store = await this.getCustomerDefaultStore();
-    localStorage.setItem("defaultStore", JSON.stringify(store));
     const myStoreDetailsWrapper = this.querySelector('#my-store-details');
 
     if (!myStoreDetailsWrapper) {
       console.warn("No #my-store-details wrapper found");
       return;
     }
+
+    const store = await this.getCustomerDefaultStore();
 
     if (!store) {
       console.log("Store not found");
@@ -580,9 +580,8 @@ class MyStore extends HTMLElement {
       storeSelectText.addEventListener('click', () => this.openMyStoreModal());
       return;
     }
-
-    this.dataset.storeCode = store.storeCode;
-    this.dataset.storeName = store.storeName;
+    
+    localStorage.setItem("defaultStore", JSON.stringify(store));
 
     console.log("Store code:", store.storeCode);
     console.log("Store name:", store.storeName);
@@ -627,9 +626,6 @@ class MyStoreModal extends HTMLElement {
       console.log("Pickup stores:", response, " and ", response?.stores?.length);
 
       const stores = response?.stores;
-
-      const storeListDiv = document.createElement('div');
-      storeListDiv.classList.add('hc-store-list');
 
       const modal = this.querySelector('#mystore-modal')
       const myStore = JSON.parse(localStorage.getItem("defaultStore"));
