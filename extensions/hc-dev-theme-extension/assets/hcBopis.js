@@ -650,22 +650,7 @@ class MyStoreModal extends HTMLElement {
         noStoreSelectedHead.textContent = 'No Store Selected';
       }
 
-      stores.forEach(store => {
-        
-        const storeDiv = this.createStoreDiv(store);
-        storeListDiv.appendChild(storeDiv);
-
-        const customLine = document.createElement('hr');
-        customLine.classList.add('custom-line');
-        storeListDiv.appendChild(customLine);
-
-      });
-      const storeListHeadText = myStore ? 'Other Stores: ' : 'Select a Store: ';
-      const storeListHead = document.createElement('h3');
-      storeListHead.textContent = storeListHeadText;
-      storeListHead.style.fontWeight = "bold";
-      modal.appendChild(storeListDiv);
-      storeListDiv.before(storeListHead);
+      this.createStoreList(stores);
       
     } catch (err) {
       console.error("Error fetching pickup stores:", err);
@@ -676,7 +661,60 @@ class MyStoreModal extends HTMLElement {
     console.log("MyStoreModal element removed from the DOM");
   }
 
-  async setShopifyCustomerDefaultStore() {
+  async setShopifyCustomerDefaultStore(store) {
+    console.log("Setting default store");
+    if (!store) {
+      console.log("Empty Input!")
+      return;
+    }
+    localStorage.setItem("defaultStore", JSON.stringify(store));
+
+    console.log(this.dataset.customerId, " and ", this.dataset.shopId);
+    if (this.dataset.customerId && this.dataset.shopId) {
+      await fetch(`https://dev-oms.hotwax.io/api/setShopifyCustomerDefaultStore`, {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          'customerId': this.dataset.customerId,
+          'shopifyShopId': this.dataset.shopId,
+          'facilityId': store.storeCode
+        })
+      })
+    }
+    this.dataset.storeCode = store.storeCode;
+    
+    console.log("Setting up done for default store");
+  }
+
+  async createStoreList(stores) {
+
+    if (!stores) {
+      console.log("Empty List passed.");
+      return;
+    }
+
+    const storeListDiv = document.createElement('div');
+    storeListDiv.classList.add('hc-store-list');
+    const myStore = JSON.parse(localStorage.getItem("defaultStore"));
+    const modal = this.querySelector("#mystore-modal");
+    stores.forEach(store => {
+      
+      const storeDiv = this.createStoreDiv(store);
+      storeListDiv.appendChild(storeDiv);
+
+      const customLine = document.createElement('hr');
+      customLine.classList.add('custom-line');
+      storeListDiv.appendChild(customLine);
+
+    });
+    const storeListHeadText = myStore ? 'Other Stores: ' : 'Select a Store: ';
+    const storeListHead = document.createElement('h3');
+    storeListHead.textContent = storeListHeadText;
+    storeListHead.style.fontWeight = "bold";
+    modal.appendChild(storeListDiv);
+    storeListDiv.before(storeListHead);
 
   }
 
