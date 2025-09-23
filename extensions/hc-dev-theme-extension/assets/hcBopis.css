@@ -129,3 +129,29 @@ my-store {
   border: none;
   cursor: pointer;
 }
+
+.hc-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border: 0.5px solid black;
+  height: 100%;
+}
+
+.hc-input-wrapper input {
+  height: 40px;
+  flex: 1;
+  background: transparent;
+  border: none;
+}
+
+.hc-input-wrapper input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.hc-input-wrapper img {
+  margin-left: 0.5rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
