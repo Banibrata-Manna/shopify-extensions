@@ -531,6 +531,10 @@ class MyStore extends HTMLElement {
 
   async getCustomerDefaultStore() {
     try {
+      if (!this.dataset.customerId) {
+        const store = localStorage.getItem("defaultStore");
+        return store ? JSON.parse(store) : undefined;
+      }
       const response = await fetch(
         `https://dev-oms.hotwax.io/api/getShopifyCustomerDefaultStore?customerId=${this.dataset.customerId}&shopifyShopId=${this.dataset.storeId}`
       );
