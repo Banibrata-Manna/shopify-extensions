@@ -645,6 +645,9 @@ class MyStoreModal extends HTMLElement {
         customLine.classList.add('custom-line');
         customLine.style.marginBottom = "20px";
         defaultStore.after(customLine);
+      } else {
+        const noStoreSelectedHead = document.createElement('h3');
+        noStoreSelectedHead.textContent = 'No Store Selected';
       }
 
       stores.forEach(store => {
