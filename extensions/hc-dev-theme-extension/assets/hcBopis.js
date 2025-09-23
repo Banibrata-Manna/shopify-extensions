@@ -638,6 +638,7 @@ class MyStoreModal extends HTMLElement {
         myStoreHead.style.fontWeight = 'bold';
 
         const defaultStore = this.createStoreDiv(myStore);
+        defaultStore.querySelector('.hc-ms-store-action')?.remove();
         modal.prepend(defaultStore);
         modal.prepend(myStoreHead);
         const customLine = document.createElement('hr');
@@ -698,9 +699,24 @@ class MyStoreModal extends HTMLElement {
     storeDetails.appendChild(storeName);
     storeDetails.appendChild(storeAddress);
     storeDetails.appendChild(storeFullAddress);
-    const setStoreAction = document.createElement('u');
-    setStoreAction.textContent = (store.pickup_pref === 'true') ? 'SET AS MY STORE' : 'Pickup Not Available at this store';
-    storeDetails.appendChild(setStoreAction);
+
+    const myStore = JSON.parse(localStorage.getItem("defaultStore"));
+
+    if (myStore.storeCode !== store.storeCode) {
+      let setStoreAction = document.createElement('p');
+      setStoreAction.textContent ='Store Pickup Not Available Here';
+      if (store.pickup_pref === 'true') {
+        setStoreAction = document.createElement('u');
+        setStoreAction.textContent ='SET AS MY STORE';
+        setStoreAction.style.cursor = 'pointer'
+      }
+
+      setStoreAction?.addEventListener('click', async () => {
+        await this.setShopifyCustomerDefaultStore(store);
+      });
+      setStoreAction.classList.add('hc-ms-store-action');
+      storeDetails.appendChild(setStoreAction);
+    }
 
     const storeContacts = document.createElement('div');
     storeContacts.classList.add('store-inv-contacts');
