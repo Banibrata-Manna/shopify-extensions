@@ -772,6 +772,66 @@ class MyStoreModal extends HTMLElement {
 
     return storeDiv;
   }
+
+  updateMyStore(selectedMyStore) {
+
+    // Validate the Input
+    if (!selectedMyStore) {
+      console.log("Empty Value Passed");
+      return;
+    }
+
+    const modal = document.querySelector('#mystore-modal');
+
+    // Clear Previous My Store
+    modal.querySelector('#selected-my-store')?.remove();
+    // Create a new Store div
+    const newSelectedMyStoreDiv = this.createStoreDiv(selectedMyStore);
+    newSelectedMyStoreDiv.id = 'selected-my-store';
+    newSelectedMyStoreDiv.querySelector('.hc-ms-store-action')?.remove();
+    const customLine = document.createElement('hr');
+    customLine.classList.add('custom-line');
+    customLine.style.marginBottom = "20px";
+    newSelectedMyStoreDiv.after(customLine);
+
+    modal.prepend(newSelectedMyStoreDiv);
+
+    const myStoreHead = modal.querySelector('#my-store-head');
+    myStoreHead.textContent = 'My Store:';
+    modal.prepend(myStoreHead);
+    
+    // Save the prevMyStore before updating the my Store in the localstorage
+    // If no store was selected then 
+    const prevMyStore = JSON.parse(localStorage.getItem("defaultStore")) || selectedMyStore;
+    localStorage.setItem("defaultStore", JSON.stringify(selectedMyStore));
+    const storeListDiv = this.querySelector('.hc-store-list');
+
+    const prevMyStoreDiv = storeListDiv.querySelector(`#${prevMyStore.storeCode}`);
+
+    // My Store could or could not be included in the store list, based on app embed block setting.
+    if (prevMyStore.storeCode !== selectedMyStore.storeCode && prevMyStoreDiv) {
+      const setStoreAction = document.createElement('u');
+      setStoreAction.textContent = 'SET AS MY STORE';
+      setStoreAction.style.cursor = 'pointer';
+      setStoreAction.classList.add('hc-ms-store-action');
+
+      setStoreAction.addEventListener('click', () => {
+        this.updateMyStore(prevMyStore);
+      });
+
+      prevMyStoreDiv.querySelector('.store-details')?.appendChild(setStoreAction);
+    }
+
+    const selectedMyStoreDiv = storeListDiv.querySelector(`#${selectedMyStore.storeCode}`);
+    selectedMyStoreDiv.querySelector('.hc-ms-store-action').remove();
+
+    this.setShopifyCustomerDefaultStore(selectedMyStore);
+
+    const myStoreBlockDetails = document.querySelector('my-store').querySelector('#my-store-details');
+    const storeTimings = getStoreTimings(selectedMyStore);
+    myStoreBlockDetails.querySelector('#detail-text').textContent = `${selectedMyStore.storeName}${storeTimings ? ` Open: ${storeTimings}` : ''}`;
+    closeMyStoreModal();
+  }
 }
 
 if (!customElements.get("my-store")) {
