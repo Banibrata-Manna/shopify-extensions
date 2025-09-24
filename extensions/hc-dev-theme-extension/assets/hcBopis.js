@@ -749,18 +749,21 @@ class MyStoreModal extends HTMLElement {
 
     const myStore = JSON.parse(localStorage.getItem("defaultStore"));
 
-    if (myStore.storeCode !== store.storeCode) {
+    // If customer has no default store
+    // If store being added to list is not my store
+    if (!myStore || myStore.storeCode !== store.storeCode) {
       let setStoreAction = document.createElement('p');
-      setStoreAction.textContent ='Store Pickup Not Available Here';
+      setStoreAction.textContent ='Store Pickup Unavailable Here';
       if (store.pickup_pref === 'true') {
         setStoreAction = document.createElement('u');
         setStoreAction.textContent ='SET AS MY STORE';
         setStoreAction.style.cursor = 'pointer'
+
+        setStoreAction.addEventListener('click', () => {
+          this.updateMyStore(store);
+        });
       }
 
-      setStoreAction?.addEventListener('click', async () => {
-        await this.setShopifyCustomerDefaultStore(store);
-      });
       setStoreAction.classList.add('hc-ms-store-action');
       storeDetails.appendChild(setStoreAction);
     }
