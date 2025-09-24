@@ -810,7 +810,7 @@ class MyStoreModal extends HTMLElement {
     modal.prepend(myStoreHead);
     
     // Save the prevMyStore before updating the my Store in the localstorage
-    // If no store was selected then 
+    // If no store was selected then set it as previous store.
     const prevMyStore = JSON.parse(localStorage.getItem("defaultStore")) || selectedMyStore;
     localStorage.setItem("defaultStore", JSON.stringify(selectedMyStore));
     const storeListDiv = this.querySelector('.hc-store-list');
