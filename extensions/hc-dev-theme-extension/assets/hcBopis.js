@@ -611,6 +611,7 @@ class MyStore extends HTMLElement {
     if (modal) {
       console.log("Here I am");
       modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
     } else {
       console.error("<my-store-modal> not found in DOM");
     }
