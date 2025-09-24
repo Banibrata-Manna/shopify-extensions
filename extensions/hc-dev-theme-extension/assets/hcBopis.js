@@ -636,10 +636,12 @@ class MyStoreModal extends HTMLElement {
 
       if (myStore) {
         const myStoreHead = document.createElement('h3');
+        myStoreHead.id = 'my-store-head';
         myStoreHead.textContent = 'My Store:';
         myStoreHead.style.fontWeight = 'bold';
 
         const defaultStore = this.createStoreDiv(myStore);
+        defaultStore.id = 'selected-my-store';
         defaultStore.querySelector('.hc-ms-store-action')?.remove();
         modal.prepend(defaultStore);
         modal.prepend(myStoreHead);
@@ -650,6 +652,9 @@ class MyStoreModal extends HTMLElement {
       } else {
         const noStoreSelectedHead = document.createElement('h3');
         noStoreSelectedHead.textContent = 'No Store Selected';
+        noStoreSelectedHead.id = 'my-store-head';
+        modal.prepend(noStoreSelectedHead);
+        noStoreSelectedHead.style.fontWeight = 'bold';
       }
 
       this.createStoreList(stores);
