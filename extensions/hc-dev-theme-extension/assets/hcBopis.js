@@ -502,7 +502,10 @@ function resetStoreList() {
 
 function closeMyStoreModal() {
   const myStoreModal = document.querySelector('my-store-modal');
+  console.log("Closing My Store Modal...");
+  myStoreModal.querySelector('#mystore-modal').scrollTop = 0;
   myStoreModal.style.display = 'none';
+  document.body.style.overflow = 'scroll';
 }
 
 class MyStore extends HTMLElement {
