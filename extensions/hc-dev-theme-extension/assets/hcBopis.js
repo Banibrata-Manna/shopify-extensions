@@ -545,7 +545,9 @@ class MyStore extends HTMLElement {
       const resp = await response.json();
       console.log("API response:", resp);
 
-      if (!resp?.customer?.facilityId) return;
+      if (!resp?.customer?.facilityId) {
+        localStorage.removeItem("defaultStore");
+      }
 
       const storeResponse = await getStores(
         undefined, undefined, undefined, undefined, undefined,
