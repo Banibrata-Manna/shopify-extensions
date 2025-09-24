@@ -766,6 +766,7 @@ class MyStoreModal extends HTMLElement {
 
     const storeDiv = document.createElement('div');
     storeDiv.classList.add('store');
+    storeDiv.id = store.storeCode;
     storeDiv.appendChild(storeDetails);
     storeDiv.appendChild(storeContacts);
 
