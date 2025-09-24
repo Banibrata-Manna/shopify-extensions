@@ -577,7 +577,7 @@ class MyStore extends HTMLElement {
     if (!store) {
       console.log("Store not found");
       const storeSelectText = document.createElement('span');
-      storeSelectText.id = 'store-select';
+      storeSelectText.id = 'detail-text';
       storeSelectText.textContent = 'Select a Store';
       storeSelectText.style.cursor = 'pointer';
       myStoreDetailsWrapper.appendChild(storeSelectText);
@@ -591,21 +591,17 @@ class MyStore extends HTMLElement {
     console.log("Store code:", store.storeCode);
     console.log("Store name:", store.storeName);
 
-    const storeName = document.createElement('span');
-    storeName.textContent = store.storeName;
-    storeName.style.cursor = 'pointer';
-    myStoreDetailsWrapper.appendChild(storeName);
+    const storeDetailText = document.createElement('span');
+    storeDetailText.id = 'detail-text'
+    storeDetailText.style.cursor = 'pointer';
+    myStoreDetailsWrapper.appendChild(storeDetailText);
 
     const timings = getStoreTimings(store);
     console.log("Store timings:", timings);
 
-    if (timings) {
-      const storeTimingsDiv = document.createElement('span');
-      storeTimingsDiv.textContent = timings;
-      myStoreDetailsWrapper.appendChild(storeTimingsDiv);
-    }
+    storeDetailText.textContent = `${store.storeName}${timings ? ` Open: ${timings}` : ''}`;
 
-    storeName.addEventListener('click', () => this.openMyStoreModal());
+    storeDetailText.addEventListener('click', () => this.openMyStoreModal());
   }
 
   openMyStoreModal() {
