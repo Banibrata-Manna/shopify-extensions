@@ -674,7 +674,6 @@ class MyStoreModal extends HTMLElement {
       console.log("Empty Input!")
       return;
     }
-    localStorage.setItem("defaultStore", JSON.stringify(store));
 
     console.log(this.dataset.customerId, " and ", this.dataset.shopId);
     if (this.dataset.customerId && this.dataset.shopId) {
