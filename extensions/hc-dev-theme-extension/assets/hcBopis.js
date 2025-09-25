@@ -708,7 +708,7 @@ class MyStoreModal extends HTMLElement {
     stores.forEach(store => {
       const showHomeStoreInSearch = this.dataset.showHomeStoreInSearch === 'true';
       const storeDiv = this.createStoreDiv(store);
-      if (!showHomeStoreInSearch && store.storeCode === myStore.storeCode) {
+      if (myStore && !showHomeStoreInSearch && store.storeCode === myStore.storeCode) {
         storeDiv.classList.add('hc-hide');
       }
       storeListDiv.appendChild(storeDiv);
@@ -716,7 +716,7 @@ class MyStoreModal extends HTMLElement {
       const customLine = document.createElement('hr');
       customLine.classList.add('custom-line');
       storeListDiv.appendChild(customLine);
-      if (!showHomeStoreInSearch && store.storeCode === myStore.storeCode) {
+      if (myStore && !showHomeStoreInSearch && store.storeCode === myStore.storeCode) {
         customLine.classList.add('hc-hide');
       }
     });
