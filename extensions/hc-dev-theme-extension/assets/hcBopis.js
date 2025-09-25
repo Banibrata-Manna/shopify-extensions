@@ -706,14 +706,19 @@ class MyStoreModal extends HTMLElement {
     const myStore = JSON.parse(localStorage.getItem("defaultStore"));
     const modal = this.querySelector("#mystore-modal");
     stores.forEach(store => {
-      
+      const showHomeStoreInSearch = this.dataset.showHomeStoreInSearch === 'true';
       const storeDiv = this.createStoreDiv(store);
+      if (!showHomeStoreInSearch && store.storeCode === myStore.storeCode) {
+        storeDiv.classList.add('hc-hide');
+      }
       storeListDiv.appendChild(storeDiv);
 
       const customLine = document.createElement('hr');
       customLine.classList.add('custom-line');
       storeListDiv.appendChild(customLine);
-
+      if (!showHomeStoreInSearch && store.storeCode === myStore.storeCode) {
+        customLine.classList.add('hc-hide');
+      }
     });
     const storeListHeadText = myStore ? 'Other Stores: ' : 'Select a Store: ';
     const storeListHead = document.createElement('h3');
@@ -839,6 +844,23 @@ class MyStoreModal extends HTMLElement {
     const myStoreBlockDetails = document.querySelector('my-store').querySelector('#my-store-details');
     const storeTimings = getStoreTimings(selectedMyStore);
     myStoreBlockDetails.querySelector('#detail-text').textContent = `${selectedMyStore.storeName}${storeTimings ? ` Open: ${storeTimings}` : ''}`;
+    const showMyStoreInSearch = this.dataset.showHomeStoreInSearch === 'true';
+    if (!showMyStoreInSearch) {
+      selectedMyStoreDiv.classList.add('hc-hide');
+      const customLine =  selectedMyStoreDiv.nextElementSibling;
+
+      if (customLine.tagName === 'HR') {
+        customLine.classList.add('hc-hide');
+      }
+
+      if (prevMyStoreDiv.id !== selectedMyStoreDiv.id) {
+        prevMyStoreDiv.classList.remove('hc-hide');
+        const prevMyStoreCustomLine = prevMyStoreDiv.nextElementSibling;
+        if (prevMyStoreCustomLine.tagName === 'HR') {
+          prevMyStoreCustomLine.classList.remove('hc-hide');
+        }
+      }
+    }
     closeMyStoreModal();
   }
 }
