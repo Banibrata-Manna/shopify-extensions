@@ -815,7 +815,7 @@ class MyStoreModal extends HTMLElement {
     localStorage.setItem("defaultStore", JSON.stringify(selectedMyStore));
     const storeListDiv = this.querySelector('.hc-store-list');
 
-    const prevMyStoreDiv = storeListDiv.querySelector(`#${prevMyStore.storeCode}`);
+    const prevMyStoreDiv = storeListDiv.querySelector(`#${CSS.escape(prevMyStore.storeCode)}`);
 
     // My Store could or could not be included in the store list, based on app embed block setting.
     if (prevMyStore.storeCode !== selectedMyStore.storeCode && prevMyStoreDiv) {
@@ -831,7 +831,7 @@ class MyStoreModal extends HTMLElement {
       prevMyStoreDiv.querySelector('.store-details')?.appendChild(setStoreAction);
     }
 
-    const selectedMyStoreDiv = storeListDiv.querySelector(`#${selectedMyStore.storeCode}`);
+    const selectedMyStoreDiv = storeListDiv.querySelector(`#${CSS.escape(selectedMyStore.storeCode)}`);
     selectedMyStoreDiv.querySelector('.hc-ms-store-action').remove();
 
     this.setShopifyCustomerDefaultStore(selectedMyStore);
