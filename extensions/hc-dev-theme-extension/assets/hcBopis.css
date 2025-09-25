@@ -154,3 +154,7 @@ my-store {
   cursor: pointer;
   flex-shrink: 0;
 }
+
+.hc-hide {
+  display: none;
+}
