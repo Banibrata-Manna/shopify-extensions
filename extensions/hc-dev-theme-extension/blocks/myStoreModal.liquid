@@ -8,7 +8,7 @@
 >
   <div id="mystore-modal" class="hc-modal">
     <div id="seleted-store" class="store" style="display: none;"></div>
-    <button onclick="closeMyStoreModal()"
+    <button id="hc-ms-close-btn" onclick="closeMyStoreModal()"
       style="
           position:absolute;
           top:10px;
@@ -21,9 +21,9 @@
     <div class="hc-modal__search">
       <div class="hc-input-wrapper">
         <input id="my-store-modal-zipcode-input" type="text" placeholder="Enter zipcode">
-        <img id="hc-ms-location-icon" src="{{ 'icon-map-pin.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
+        <img id="hc-ms-location-icon" src="{{ 'LocationIcon.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
       </div>
-      <button class="hc-modal-find-stores-btn" onclick="searchStoresByZip(document.getElementById('my-store-modal-zipcode-input').value)"
+      <button class="hc-modal-find-stores-btn"
       >Find Stores</button>
     </div>
   </div>

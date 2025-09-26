@@ -25,8 +25,9 @@ async function isVariantAvailable(shopifyVariantId) {
   return variant?.available;
 }
 
-async function getAllPickupStores(point, distance, includeWarehouse) {
-  return await getStores(500, undefined, point, distance, includeWarehouse);
+async function getStoresByBaseCondition(payload) {
+  const { point, distance, includeWarehouse, filters } = payload;   
+  return await getStores(500, undefined, point, distance, includeWarehouse, filters);
 }
 
 // TODO: Implement Searching Stores by partial zipcode.
@@ -549,10 +550,17 @@ class MyStore extends HTMLElement {
         localStorage.removeItem("defaultStore");
       }
 
-      const storeResponse = await getStores(
-        undefined, undefined, undefined, undefined, undefined,
-        [`storeCode: ${resp.customer.facilityId}`]
-      );
+      const myStoreModal = document.querySelector('my-store-modal');
+      const includeWarehouse = myStoreModal.dataset.showWarehouse;
+      const storeSearchProximity = myStoreModal.dataset.storeSearchProximity;
+
+      const payload = {};
+
+      if (includeWarehouse) payload.includeWarehouse = includeWarehouse;
+      if (storeSearchProximity) payload.distance = storeSearchProximity;
+      payload.filters = [`storeCode: ${resp.customer.facilityId}`];
+
+      const storeResponse = await getStoresByBaseCondition(payload);
 
       const store = storeResponse?.stores?.[0];
       console.log("Default store:", store);
@@ -623,8 +631,13 @@ class MyStoreModal extends HTMLElement {
   }
 
   async connectedCallback() {
+    await this.intialize();
+    this.querySelector('#hc-ms-close-btn').addEventListener('click', () => { this.closeMyStoreModal(); });
+  }
+
+  async intialize () {
     try {
-      const response = await getAllPickupStores();
+      const response = await getStoresByBaseCondition(this.getBaseConditionsForStoreLookup());
       console.log("Pickup stores:", response, " and ", response?.stores?.length);
 
       const stores = response?.stores;
@@ -658,10 +671,69 @@ class MyStoreModal extends HTMLElement {
       }
 
       this.createStoreList(stores);
+      const findStoresButton = modal.querySelector('.hc-modal-find-stores-btn');
+      const locationIcon = modal.querySelector('#hc-ms-location-icon');
+
+      findStoresButton?.addEventListener('click', async () => {
+        try {
+          // Prevent user to run this more than once simultaneously.
+          findStoresButton.disabled = true;
+          if (locationIcon.dataset.pickLocation === 'false') {
+            locationIcon.dataset.pickLocation = 'true';
+            locationIcon.src = 'assets/LocationFilledIcon.svg';
+          }
+          const zipCodeInput = this.querySelector('#my-store-modal-zipcode-input').value;
+          const storesByZip = await this.getStoresByZip(zipCodeInput);
+          this.replaceStoreListDivAndHead(storesByZip?.stores);
+        } catch (error) {
+          console.error("Error is Search: ", error);
+        }
+        // Enable the button again
+        findStoresButton.disabled = false;
+      });
+
+      locationIcon.addEventListener('click', async () => {
+        try {
+          findStoresButton.disabled = true;
+          let stores = undefined;
+          if (locationIcon.dataset.picklocation === 'false') {
+            locationIcon.dataset.picklocation = 'true';
+            locationIcon.src = '../assets/LocationFilledIcon.svg';
+            stores = await this.getStoresByCurrentLocation();
+          } 
+          else {
+            locationIcon.src = '../assets/LocationIcon.svg';
+            locationIcon.dataset.picklocation = 'false';
+            stores = await getStoresByBaseCondition(this.getBaseConditionsForStoreLookup());
+          }
+          // Clear any input in search bar
+          this.querySelector('#my-store-modal-zipcode-input').value = '';
+
+          this.replaceStoreListDivAndHead(stores?.stores);
+        } catch (error) {
+          console.error("Error in finding Nearby Stores: ", error);
+        }
+
+        findStoresButton.disabled = false;
+      });
       
     } catch (err) {
       console.error("Error fetching pickup stores:", err);
     }
+  }
+
+  async reintialize () {
+    this.querySelector('#my-store-head')?.remove();
+    this.querySelector('#selected-my-store')?.remove();
+    this.querySelector('#store-list-head')?.remove();
+    this.querySelector('.hc-store-list')?.remove();
+    this.querySelector('#my-store-modal-zipcode-input').value = '';
+    const findStoresBtn = this.querySelector('.hc-modal-find-stores-btn');
+    findStoresBtn.parentNode.replaceChild(findStoresBtn.cloneNode(true), findStoresBtn);
+    const locationIcon = this.querySelector('#hc-ms-location-icon');
+    locationIcon.parentNode.replaceChild(locationIcon.cloneNode(true), locationIcon);
+    this.querySelector('.custom-line')?.remove();
+    this.intialize();
   }
 
   disconnectedCallback() {
@@ -694,7 +766,7 @@ class MyStoreModal extends HTMLElement {
     console.log("Setting up done for default store");
   }
 
-  async createStoreList(stores) {
+  createStoreList(stores) {
 
     if (!stores) {
       console.log("Empty List passed.");
@@ -722,11 +794,19 @@ class MyStoreModal extends HTMLElement {
     });
     const storeListHeadText = myStore ? 'Other Stores: ' : 'Select a Store: ';
     const storeListHead = document.createElement('h3');
+    storeListHead.id = 'store-list-head';
     storeListHead.textContent = storeListHeadText;
     storeListHead.style.fontWeight = "bold";
+    modal.appendChild(storeListHead);
     modal.appendChild(storeListDiv);
-    storeListDiv.before(storeListHead);
+    return storeListDiv;
+  }
 
+  replaceStoreListDivAndHead (stores) {
+    const oldStoreListDiv = this.querySelector('.hc-store-list');
+    this.querySelector('#store-list-head')?.remove();
+    const newStoreListDiv = this.createStoreList(stores);
+    oldStoreListDiv?.remove();
   }
 
   createStoreDiv(store) {
@@ -861,7 +941,65 @@ class MyStoreModal extends HTMLElement {
         }
       }
     }
-    closeMyStoreModal();
+    this.closeMyStoreModal();
+  }
+
+  async getStoresByCurrentLocation () {
+    const position = await getCurrentLocation();
+
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    const payload = this.getBaseConditionsForStoreLookup();
+
+    console.log("This is payload from currecnt location search function: ", payload);
+
+    if (lat && lon) {
+      payload.point = `${lat},${lon}`;
+    } else {
+      console.error("No Stores to lookup!");
+      return;
+    }
+
+    return await getStoresByBaseCondition(payload);
+  }
+
+  async getStoresByZip (zipcode) {
+
+    const { lat, lon } = await getLatLon(zipcode);
+
+    const payload = this.getBaseConditionsForStoreLookup();
+
+    if (lat && lon) {
+      payload.point = `${lat},${lon}`;
+    } else {
+      console.error("No Stores to lookup!");
+      return;
+    }
+
+    return await getStoresByBaseCondition(payload);
+  }
+
+  getBaseConditionsForStoreLookup () {
+    const showWarehouse = this.dataset.showWarehouse;
+    const storeSearchProximity = this.dataset.storeSearchProximity;
+
+    console.log(showWarehouse, ' and ', storeSearchProximity);
+
+    const payload = {};
+
+    if (showWarehouse) payload.includeWarehouse = showWarehouse;
+    if (storeSearchProximity) payload.distance = storeSearchProximity;
+
+    return payload;
+  }
+
+  closeMyStoreModal () {
+    console.log("Closing My Store Modal...");
+    this.querySelector('#mystore-modal').scrollTop = 0;
+    this.style.display = 'none';
+    document.body.style.overflow = 'scroll';
+    this.reintialize();
   }
 }
 
