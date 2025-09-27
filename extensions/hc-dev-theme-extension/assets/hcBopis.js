@@ -59,7 +59,6 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse,
   } else {
     requestBody.filters.push("storeType: RETAIL_STORE");
   }
-  requestBody.sortBy = "storeName asc";
 
   } catch (error) {
     console.error("Error getting location:", error.message);
