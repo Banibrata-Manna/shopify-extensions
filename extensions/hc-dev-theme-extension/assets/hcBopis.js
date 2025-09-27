@@ -677,9 +677,9 @@ class MyStoreModal extends HTMLElement {
         try {
           // Prevent user to run this more than once simultaneously.
           findStoresButton.disabled = true;
-          if (locationIcon.dataset.pickLocation === 'false') {
-            locationIcon.dataset.pickLocation = 'true';
-            locationIcon.src = 'assets/LocationFilledIcon.svg';
+          if (locationIcon.dataset.picklocation === 'true') {
+            locationIcon.dataset.picklocation = 'false';
+            locationIcon.src = 'assets/LocationIcon.svg';
           }
           const zipCodeInput = this.querySelector('#my-store-modal-zipcode-input').value;
           const storesByZip = await this.getStoresByZip(zipCodeInput);
