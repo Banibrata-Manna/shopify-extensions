@@ -24,6 +24,8 @@
 
 .store-details {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   text-wrap: wrap;
   max-width: 60%;
 }
@@ -47,14 +49,6 @@
   text-wrap: nowrap;
   font-size: 16px;
   margin-bottom: 2rem;
-}
-
-.store-actions {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: center;
 }
 
 .custom-line {
@@ -166,8 +160,18 @@ my-store {
   vertical-align: middle;
 }
 
-.hc-clock-icon {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
+.pickup-store-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.pickup-btn {
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
+  border: 1px solid rgb(0, 0, 0);
+  cursor: pointer;
+  padding: 10px 40%;
+  text-wrap: nowrap;
+  font-size: 16px;
+  margin-bottom: 2rem;
 }
