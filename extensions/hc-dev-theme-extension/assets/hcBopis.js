@@ -818,18 +818,42 @@ class MyStoreModal extends HTMLElement {
     const storeFullAddress = document.createElement('p')
     storeFullAddress.textContent = [store.city, store.postalCode, store.countryCode].filter(Boolean).join(', ');
 
-    const storePhone = document.createElement('p');
-    storePhone.textContent = store.storePhone;
-
-    const storeTimings = document.createElement('p');
-    const timing = getStoreTimings(store);
-    storeTimings.textContent = `Open Today: ${timing || 'No Timings Available'}`;
-
     const storeDetails = document.createElement('div');
     storeDetails.classList.add('store-details');
     storeDetails.appendChild(storeName);
     storeDetails.appendChild(storeAddress);
     storeDetails.appendChild(storeFullAddress);
+
+    const storeContacts = document.createElement('div');
+    storeContacts.classList.add('store-inv-contacts');
+
+    if (store.storePhone) {
+      const phoneSpan = document.createElement('span');
+      const phoneIconImg = document.createElement('img');
+      phoneIconImg.classList.add('hc-phone-icon');
+      phoneIconImg.src = '../assets/PhoneIcon.svg'
+      phoneSpan.appendChild(phoneIconImg);
+      const storePhoneNum = document.createElement('span');
+      storePhoneNum.textContent = store.storePhone;
+
+      phoneSpan.appendChild(storePhoneNum);
+      storeContacts.appendChild(phoneSpan);
+    }
+
+    const timing = getStoreTimings(store);
+
+    if (this.dataset.showTimings === 'true' && timing) {
+
+      const timingSpan = document.createElement('span');
+      const clockIcon = document.createElement('img');
+      clockIcon.classList.add('hc-clock-icon');
+      clockIcon.src = '../assets/ClockIcon.svg';
+      timingSpan.appendChild(clockIcon);
+      const storeTimings = document.createElement('span');
+      storeTimings.textContent = `Open Today: ${timing}`;
+      timingSpan.appendChild(storeTimings);
+      storeContacts.appendChild(timingSpan);
+    }
 
     const myStore = JSON.parse(localStorage.getItem("defaultStore"));
 
@@ -852,16 +876,16 @@ class MyStoreModal extends HTMLElement {
       storeDetails.appendChild(setStoreAction);
     }
 
-    const storeContacts = document.createElement('div');
-    storeContacts.classList.add('store-inv-contacts');
-    storeContacts.appendChild(storePhone);
-    storeContacts.appendChild(storeTimings);
-
     const storeDiv = document.createElement('div');
     storeDiv.classList.add('store');
     storeDiv.id = store.storeCode;
     storeDiv.appendChild(storeDetails);
-    storeDiv.appendChild(storeContacts);
+    if (storeContacts.childElementCount) {
+     storeDiv.appendChild(storeContacts); 
+    } else {
+      storeContacts.remove();
+      storeDetails.style.maxWidth = 'none';
+    }
 
     return storeDiv;
   }
