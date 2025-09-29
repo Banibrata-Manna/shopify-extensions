@@ -21,7 +21,6 @@ async function fetchProductVariantById(shopifyVariantId) {
 
 async function isVariantAvailable(shopifyVariantId) {
   const variant = await fetchProductVariantById(shopifyVariantId);
-  console.log("*****************************This is the variant availability: ", variant?.available);
   return variant?.available;
 }
 
@@ -37,8 +36,6 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse,
   let requestBody = {};
   try {
   if (point) {
-    // const position = await getCurrentLocation();
-    // point = `${position.coords.latitude},${position.coords.longitude}`;
     requestBody.point = point;
 
     if (distance) {
@@ -47,15 +44,15 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse,
   }
   if (viewSize) {
     requestBody.viewSize = viewSize;
-    if (viewIndex) {
-      requestBody.viewIndex = viewIndex;
-    }
+  }
+  if (viewIndex) {
+    requestBody.viewIndex = viewIndex;
   }
   filters.push("pickup_pref: true");
 
   requestBody.filters = filters;
   if (includeWarehouse === 'true') {
-    requestBody.filters.push("storeType: (RETAIL_STORE OR WAREHOUSE OR OUTLET_WAREHOUSE)");
+    requestBody.filters.push("storeType: (RETAIL_STORE OR WAREHOUSE)");
   } else {
     requestBody.filters.push("storeType: RETAIL_STORE");
   }
