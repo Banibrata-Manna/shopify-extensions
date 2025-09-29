@@ -252,15 +252,102 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
   return storesWithInventory;
 }
 
+function createPickupStoreDiv (store, payload) {
+
+  console.log("This is store: ", store, " and payload: ", payload);
+  if (!store) {
+    console.log("Empty Value passes in store param");
+    return;
+  }
+
+  const { enablePickup, inStock, pickupItemProperty, properties, pickupItemPropertyLabel, productId } = payload;
+
+  const newStoreDiv = document.createElement('div');
+  newStoreDiv.classList.add('store');
+
+  const storeDetailDiv = document.createElement('div');
+  storeDetailDiv.classList.add('store-details');
+
+  const storeName = document.createElement('h3');
+  storeName.textContent = store.storeName;
+  storeName.classList.add('store-name');
+  const storeAddress = document.createElement('span');
+  storeAddress.textContent = store.address1;
+
+  storeDetailDiv.appendChild(storeName);
+  storeDetailDiv.appendChild(storeAddress);
+
+  if (store.city || store.postalCode || store.countryCode) {
+    const storeFullAddress = document.createElement('span');
+    storeFullAddress.textContent = [store.city, store.postalCode, store.countryCode].filter(Boolean).join(', ');
+    storeDetailDiv.appendChild(storeFullAddress);
+  }
+
+  const storeInvContacts = document.createElement('div');
+  storeInvContacts.classList.add('store-inv-contacts');
+  const stockDetail = document.createElement('span');
+  stockDetail.textContent = enablePickup && inStock ? 'In Stock' : 'Out of Stock';
+  storeInvContacts.appendChild(stockDetail);
+
+  if (store.storePhone) {
+    const storePhone = document.createElement('span');
+    const phoneIcon = document.createElement('img');
+    phoneIcon.classList.add('hc-icon');
+    phoneIcon.src = '../assets/PhoneIcon.svg';
+    const storePhoneNum = document.createElement('span');
+    storePhoneNum.textContent = store.storePhone;
+    storePhone.appendChild(phoneIcon);
+    storePhone.appendChild(storePhoneNum);
+    storeInvContacts.appendChild(storePhone);
+  }
+
+  const storeTimings = getStoreTimings(store);
+
+  if (storeTimings) {
+    const timingSpan = document.createElement('span');
+    const clockIcon = document.createElement('img');
+    clockIcon.classList.add('hc-icon');
+    clockIcon.src = '../assets/ClockIcon.svg';
+    const storeTiming = document.createElement('span');
+    storeTiming.textContent = storeTimings;
+
+    timingSpan.appendChild(clockIcon);
+    timingSpan.appendChild(storeTiming);
+    storeInvContacts.appendChild(timingSpan);
+  }
+
+  newStoreDiv.append(storeDetailDiv, storeInvContacts);
+
+  const pickupStoreWrapperDiv = document.createElement('div');
+  pickupStoreWrapperDiv.id = store.storeCode;
+  pickupStoreWrapperDiv.classList.add('pickup-store-wrapper');
+
+  pickupStoreWrapperDiv.appendChild(newStoreDiv);
+
+  if (enablePickup && inStock) {
+    const pickupButton = document.createElement('button');
+    pickupButton.textContent = 'Pickup Here'
+    pickupButton.classList.add('pickup-btn');
+  pickupStoreWrapperDiv.appendChild(pickupButton);
+    pickupButton.addEventListener('click', () => {
+      if (pickupItemProperty) {
+        (store.city || store.address1 || store.storeName) ? properties[pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
+      }
+      addToCart(Number(productId), 1, properties);
+    });
+  }
+  return pickupStoreWrapperDiv;
+}
+
 async function generateStoreListHTML(container) {
   if (!container) return;
-  const enablePickup = Boolean(container.dataset.showPickupHere);
+  const enablePickup = container.dataset.showPickupHere === 'true';
 
   // Clear any previous store listings
   container.innerHTML = '';
 
   console.log("This is the point: ", container.dataset.point);
-  const pickupItemProperty = Boolean(container.dataset.pickupItemProperty);
+  const pickupItemProperty = container.dataset.pickupItemProperty === 'true';
   const pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
   const showOutOfStockStores = container.dataset.showOutOfStockStores === 'true';
 
@@ -273,7 +360,7 @@ async function generateStoreListHTML(container) {
   container.dataset.totalPages = Math.ceil(storesFound / maxStoresToShow);
   console.log("This is number of total pages: ", container.dataset.totalPages);
 
-  if (storesFound === 0) {
+  if (!storesFound) {
     container.innerHTML = '<p style="text-align: center;">No stores found</p>';
       STORE_LIST_PAGINATION.style.display = 'none';
     return;
@@ -284,55 +371,26 @@ async function generateStoreListHTML(container) {
   const storesWithInventory = await filterStoresByInventoryAvailability(stores, container.dataset.productSku);
   console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory);
 
-  const storeActions = enablePickup
-  ? `<div class="store-actions">
-       <button id="pickup-btn" class="btn">
-         Pickup Here
-       </button>
-     </div>`
-  : '';
-
   stores.forEach(store => {
-    const inStock = storesWithInventory?.includes(store.storeCode);
-    const storeName = store.storeName || '';
-    const address1 = store.address1 || '';
-    const city = store.city || '';
-    const postalCode = store.postalCode || '';
-    const countryCode = store.countryCode || '';
-    const phone = store.storePhone || 'Phone Number Not Available';
-    const timings = getStoreTimings(store);
-
-    let properties = {
+    const properties = {
       "_pickupstore": store.storeCode
     };
 
-    const html = `
-      <div class="store">
-        <div class="store-details">
-          ${storeName ? `<h3 class="store-name">${storeName}</h3>` : ''}
-          ${address1 ? `<p>${address1}</p>` : ''}
-          ${(city || postalCode || countryCode) ? `<p>${[city, postalCode, countryCode].filter(Boolean).join(', ')}</p>` : ''}
-        </div>
-        <div class="store-inv-contacts">
-          <p>${inStock ? 'In Stock' : 'Out of Stock'}</p>
-          ${phone ? `<p>Phone: ${phone}</p>` : ''}
-          ${timings ? `<p>Open Today: ${timings}</p>` : 'Store Timings Not Available!'}
-        </div>
-      </div>
-      ${inStock ? storeActions : ''}
-      <hr class="custom-line">
-    `;
-
-    container.insertAdjacentHTML('beforeend', html);
-
-    if (enablePickup && inStock) {
-      container.querySelector("#pickup-btn").addEventListener("click", addToCartListener = () => {
-        if (pickupItemProperty) {
-          (city || address1 || storeName) ? properties[pickupItemPropertyLabel] = [storeName, address1, city].filter(Boolean).join(', ') : '';
-        }
-        addToCart(Number(container.dataset.productId), 1, properties);
-      });
+    const payload = {
+      pickupItemProperty: pickupItemProperty,
+      pickupItemPropertyLabel: pickupItemPropertyLabel,
+      enablePickup: enablePickup,
+      inStock: storesWithInventory?.includes(store.storeCode),
+      properties: properties,
+      productId: Number(container.dataset.productId)
     }
+
+    const newStoreDiv = createPickupStoreDiv(store, payload);
+
+    container.appendChild(newStoreDiv);
+    const customLine = document.createElement('hr');
+    customLine.classList.add('custom-line');
+    container.appendChild(customLine);
   });
 }
 
