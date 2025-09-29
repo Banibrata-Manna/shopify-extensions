@@ -175,7 +175,7 @@ async function searchStoresByZip(zipcode) {
   await searchStoresByLocation(lat, lon);
 }
 
-function addToCart(currentVariantId, quantity = 1, properties) {
+function addToCart(currentVariantId, properties, quantity = 1) {
   if (!currentVariantId) {
     alert('No variant selected!');
     return;
@@ -184,7 +184,6 @@ function addToCart(currentVariantId, quantity = 1, properties) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
     },
     body: JSON.stringify({
       items: [
@@ -333,7 +332,7 @@ function createPickupStoreDiv (store, payload) {
       if (pickupItemProperty) {
         (store.city || store.address1 || store.storeName) ? properties[pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
       }
-      addToCart(Number(productId), 1, properties);
+      addToCart(Number(productId), properties);
     });
   }
   return pickupStoreWrapperDiv;
