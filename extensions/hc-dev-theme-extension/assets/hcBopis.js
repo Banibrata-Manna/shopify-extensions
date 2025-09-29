@@ -830,7 +830,7 @@ class MyStoreModal extends HTMLElement {
     if (store.storePhone) {
       const phoneSpan = document.createElement('span');
       const phoneIconImg = document.createElement('img');
-      phoneIconImg.classList.add('hc-phone-icon');
+      phoneIconImg.classList.add('hc-icon');
       phoneIconImg.src = '../assets/PhoneIcon.svg'
       phoneSpan.appendChild(phoneIconImg);
       const storePhoneNum = document.createElement('span');
@@ -846,7 +846,7 @@ class MyStoreModal extends HTMLElement {
 
       const timingSpan = document.createElement('span');
       const clockIcon = document.createElement('img');
-      clockIcon.classList.add('hc-clock-icon');
+      clockIcon.classList.add('hc-icon');
       clockIcon.src = '../assets/ClockIcon.svg';
       timingSpan.appendChild(clockIcon);
       const storeTimings = document.createElement('span');
