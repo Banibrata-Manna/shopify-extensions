@@ -476,6 +476,8 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pi
 
   await generateStoreListHTML(container);
   await initializePagination(container);
+
+  document.body.style.overflow = 'hidden';
 }
 
 function makePrevHandler(container) {
@@ -522,7 +524,7 @@ async function initializePagination(container) {
 
 function closePickupModal() {
   const modal = document.getElementById("pickup-modal-embed");
-  if (modal) {
+  try {
     modal.style.display = "none";
     const searchBarInput = document.querySelector(
       "#hc-pickup-modal__search input"
@@ -531,7 +533,10 @@ function closePickupModal() {
       searchBarInput.value = "";
     }
     resetStoreList();
+  } catch (error) {
+    console.error("Error while closing Pikcup Modal", error);
   }
+  document.body.style.overflow = "scroll";
 }
 
 
