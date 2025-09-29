@@ -39,18 +39,6 @@
   word-wrap: break-word;
 }
 
-
-#pickup-btn {
-  background-color: #ffffff;
-  color: rgb(0, 0, 0);
-  border: 1px solid rgb(0, 0, 0);
-  cursor: pointer;
-  padding: 10px 40%;
-  text-wrap: nowrap;
-  font-size: 16px;
-  margin-bottom: 2rem;
-}
-
 .custom-line {
   height: 1px;
   background-color: rgb(201, 198, 198);
