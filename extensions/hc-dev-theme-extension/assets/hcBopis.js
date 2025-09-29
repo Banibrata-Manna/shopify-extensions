@@ -260,7 +260,7 @@ function createPickupStoreDiv (store, payload) {
     return;
   }
 
-  const { enablePickup, inStock, pickupItemProperty, properties, pickupItemPropertyLabel, productId } = payload;
+  const { enablePickup, isInStock, pickupItemProperty, properties, pickupItemPropertyLabel, productId } = payload;
 
   const newStoreDiv = document.createElement('div');
   newStoreDiv.classList.add('store');
@@ -286,7 +286,7 @@ function createPickupStoreDiv (store, payload) {
   const storeInvContacts = document.createElement('div');
   storeInvContacts.classList.add('store-inv-contacts');
   const stockDetail = document.createElement('span');
-  stockDetail.textContent = enablePickup && inStock ? 'In Stock' : 'Out of Stock';
+  stockDetail.textContent = enablePickup && isInStock ? 'In Stock' : 'Out of Stock';
   storeInvContacts.appendChild(stockDetail);
 
   if (store.storePhone) {
@@ -324,7 +324,7 @@ function createPickupStoreDiv (store, payload) {
 
   pickupStoreWrapperDiv.appendChild(newStoreDiv);
 
-  if (enablePickup && inStock) {
+  if (enablePickup && isInStock) {
     const pickupButton = document.createElement('button');
     pickupButton.textContent = 'Pickup Here'
     pickupButton.classList.add('pickup-btn');
@@ -380,7 +380,7 @@ async function generateStoreListHTML(container) {
       pickupItemProperty: pickupItemProperty,
       pickupItemPropertyLabel: pickupItemPropertyLabel,
       enablePickup: enablePickup,
-      inStock: storesWithInventory?.includes(store.storeCode),
+      isInStock: storesWithInventory?.includes(store.storeCode),
       properties: properties,
       productId: Number(container.dataset.productId)
     }
