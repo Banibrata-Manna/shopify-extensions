@@ -32,7 +32,7 @@ async function getStoresByBaseCondition(payload) {
 // TODO: Implement Searching Stores by partial zipcode.
 async function getStores(viewSize, viewIndex, point, distance, includeWarehouse, filters = []) {
   let stores = [];
-  let storesFound;
+  let totalStores;
   let requestBody = {};
   try {
   if (point) {
@@ -73,12 +73,12 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse,
 
     const data = await response.json();
     stores = data?.response?.docs || [];
-    storesFound = data?.response?.numFound || 0;
+    totalStores = data?.response?.numFound || 0;
   } catch (error) {
     console.error('Error fetching stores:', error);
   }
 
-  return { stores, storesFound };
+  return { stores, totalStores: totalStores };
 }
 
 function formatTime24to12(time) {
@@ -356,11 +356,11 @@ async function generateStoreListHTML(container) {
   const maxStoresToShow = parseInt(container.dataset.maxStoresDisplay, 10) || 5;
   const response = await getStores(maxStoresToShow, viewIndex, container.dataset.point, container.dataset.storeProximity, container.dataset.includeWarehouse);
   const stores = response.stores;
-  const storesFound = response.storesFound;
-  container.dataset.totalPages = Math.ceil(storesFound / maxStoresToShow);
+  const totalStores = response.totalStores;
+  container.dataset.totalPages = Math.ceil(totalStores / maxStoresToShow);
   console.log("This is number of total pages: ", container.dataset.totalPages);
 
-  if (!storesFound) {
+  if (!totalStores) {
     container.innerHTML = '<p style="text-align: center;">No stores found</p>';
       STORE_LIST_PAGINATION.style.display = 'none';
     return;
