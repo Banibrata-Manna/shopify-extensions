@@ -163,3 +163,21 @@ my-store {
   font-size: 16px;
   margin-bottom: 2rem;
 }
+
+#pagination {
+  display:flex;
+  justify-content:center;
+  gap:1rem;
+  margin-top:1rem;
+  align-items:center;
+}
+
+.nav-btn {
+  border: none;
+  background: white;
+  cursor: pointer;
+}
+
+.nav-btn:disabled {
+  cursor: not-allowed;
+}
