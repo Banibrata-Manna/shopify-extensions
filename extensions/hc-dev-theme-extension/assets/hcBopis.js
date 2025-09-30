@@ -285,7 +285,12 @@ function createPickupStoreDiv (store, payload) {
   const storeInvContacts = document.createElement('div');
   storeInvContacts.classList.add('store-inv-contacts');
   const stockDetail = document.createElement('span');
-  stockDetail.textContent = enablePickup && isInStock ? 'In Stock' : 'Out of Stock';
+  const stockDetailText = document.createElement('span');
+  const stockDetailIcon = document.createElement('img');
+  stockDetailIcon.classList.add('hc-icon');
+  stockDetailIcon.src = enablePickup && isInStock ? '../assets/CheckIcon.svg' : '../assets/XSmallIcon.svg';
+  stockDetailText.textContent = enablePickup && isInStock ? 'In Stock' : 'Out of Stock';
+  stockDetail.append(stockDetailIcon, stockDetailText);
   storeInvContacts.appendChild(stockDetail);
 
   if (store.storePhone) {
