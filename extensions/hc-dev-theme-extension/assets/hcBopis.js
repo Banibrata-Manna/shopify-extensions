@@ -171,6 +171,10 @@ async function searchStoresByLocation(lat, lon) {
 }
 
 async function searchStoresByZip(zipcode) {
+  if (!zipcode) {
+    console.error("Empty Input");
+    return;
+  }
   const { lat, lon } = await getLatLon(zipcode);
   await searchStoresByLocation(lat, lon);
 }
