@@ -349,6 +349,7 @@ async function generateStoreListHTML(container) {
   const pickupItemProperty = container.dataset.pickupItemProperty === 'true';
   const pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
   const showOutOfStockStores = container.dataset.showOutOfStockStores === 'true';
+  const showHomeStoreInSearch = container.dataset.showHomeStoreInSearch === 'true';
 
 
   const viewIndex = container.dataset.viewIndex;
@@ -370,7 +371,17 @@ async function generateStoreListHTML(container) {
   const storesWithInventory = await filterStoresByInventoryAvailability(stores, container.dataset.productSku);
   console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory);
 
+  let myStore = localStorage.getItem("defaultStore");
+  if (myStore) {
+    myStore = JSON.parse(myStore);
+  }
+
   stores.forEach(store => {
+
+    if (!showHomeStoreInSearch && myStore && store.storeCode === myStore.storeCode) {
+      return;
+    }
+
     const properties = {
       "_pickupstore": store.storeCode
     };
