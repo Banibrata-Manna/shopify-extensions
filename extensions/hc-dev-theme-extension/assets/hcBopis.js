@@ -255,6 +255,38 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
   return storesWithInventory;
 }
 
+function createInlineMyStorePickupHead(store, payload) {
+  const myStorePickupWrapper = document.createElement('div');
+  myStorePickupWrapper.id = store.storeCode;
+  myStorePickupWrapper.classList.add('hc-pc-ms-inline-div');
+
+  const { enablePickup, isInStock, pickupItemProperty, properties, pickupItemPropertyLabel, productId } = payload;
+
+  // Clear any previous My Store Details
+  myStorePickupWrapper.innerHTML = "";
+
+  const headingSpan = document.createElement('span');
+  headingSpan.textContent = `Pick up at ${store.storeName}`;
+
+  myStorePickupWrapper.appendChild(headingSpan);
+
+  if (enablePickup && isInStock) {
+    const myStorePickupBtn = document.createElement('button');
+    myStorePickupBtn.textContent = 'PICK UP IN STORE';
+    myStorePickupBtn.classList.add('pickup-btn');
+
+    myStorePickupBtn.addEventListener('click', () => {
+      if (pickupItemProperty) {
+        (store.city || store.address1 || store.storeName) ? properties[pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
+      }
+      addToCart(Number(productId), properties);
+    });
+
+    myStorePickupWrapper.appendChild(myStorePickupBtn);
+  }
+  return myStorePickupWrapper;
+}
+
 function createPickupStoreDiv (store, payload) {
 
   console.log("This is store: ", store, " and payload: ", payload);
