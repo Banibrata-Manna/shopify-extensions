@@ -501,33 +501,41 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pi
 
 function makePrevHandler(container) {
   return async function(event) {
+    const next = document.getElementById('next-page');
+    next.disabled = true;
+    const prev = document.getElementById('prev-page');
+    prev.disabled = true;
     let currentPage = parseInt(container.dataset.viewIndex, 10);
     if (currentPage > 0) {
       currentPage--;
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
       container.dataset.viewIndex = currentPage;
       await generateStoreListHTML(container);
-      document.getElementById('next-page').disabled = false;
-      document.getElementById('prev-page').disabled = currentPage === 0;
+      next.disabled = false;
+      prev.disabled = currentPage === 0;
     }
   };
 }
 
 function makeNextHandler(container) {
   return async function(event) {
+    const next = document.getElementById('next-page');
+    next.disabled = true;
+    const prev = document.getElementById('prev-page');
+    prev.disabled = true;
     let currentPage = parseInt(container.dataset.viewIndex, 10);
     let totalPages = parseInt(container.dataset.totalPages, 10);
     currentPage++;
     console.log("Total Pages: ", totalPages, " and current page: ", currentPage);
     if (currentPage === totalPages) {
-      document.getElementById('next-page').disabled = true;
+      next.disabled = true;
     }
     if (currentPage < totalPages) {
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
       container.dataset.viewIndex = currentPage;
       await generateStoreListHTML(container);
-      document.getElementById('prev-page').disabled = false;
-      document.getElementById('next-page').disabled = currentPage >= totalPages - 1;
+      prev.disabled = false;
+      next.disabled = currentPage >= totalPages - 1;
     }
   };
 }
