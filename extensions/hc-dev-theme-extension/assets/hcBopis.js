@@ -282,16 +282,7 @@ function createInlineMyStorePickupHead(store, payload) {
   myStorePickupWrapper.appendChild(headingSpan);
 
   if (pickupBlockSettings.enablePickup && isInStock) {
-    const myStorePickupBtn = document.createElement('button');
-    myStorePickupBtn.textContent = 'PICK UP IN STORE';
-    myStorePickupBtn.classList.add('pickup-btn');
-
-    myStorePickupBtn.addEventListener('click', (event) => {
-      if (pickupBlockSettings.pickupItemProperty) {
-        (store.city || store.address1 || store.storeName) ? properties[pickupBlockSettings.pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
-      }
-      addToCart(Number(selectedProductVariant?.id), properties);
-    });
+    const myStorePickupBtn = createPickupHereButton(properties);
 
     myStorePickupWrapper.appendChild(myStorePickupBtn);
   }
@@ -391,20 +382,12 @@ function createPickupStoreDiv (store, payload) {
   pickupStoreWrapperDiv.appendChild(newStoreDiv);
 
   if (pickupBlockSettings.enablePickup && isInStock) {
-    const pickupButton = document.createElement('button');
-    pickupButton.textContent = 'PICK UP IN STORE';
-    pickupButton.classList.add('pickup-btn');
+    const pickupButton = createPickupHereButton(properties);
     if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
       storeInvContacts.appendChild(pickupButton);
     } else {
       pickupStoreWrapperDiv.appendChild(pickupButton);
     }
-    pickupButton.addEventListener('click', (event) => {
-      if (pickupBlockSettings.pickupItemProperty) {
-        (store.city || store.address1 || store.storeName) ? properties[pickupBlockSettings.pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
-      }
-      addToCart(Number(selectedProductVariant?.id), properties);
-    });
   }
   return pickupStoreWrapperDiv;
 }
