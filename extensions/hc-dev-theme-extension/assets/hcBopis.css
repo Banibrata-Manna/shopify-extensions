@@ -196,13 +196,13 @@ my-store {
   display: none;
 }
 
-#hc-pc-my-store .hc-pc-ms-inline-div{
+#hc-pc-my-store .hc-pc-mystore-pickup{
   display: flex;
   flex-direction: row;
   justify-content: space-between;
 }
 
-.hc-pc-ms-inline-div .pickup-btn {
+.hc-pc-mystore-pickup .pickup-btn {
   display: inline-block;
   border: 1px solid black;
   cursor: pointer;
@@ -211,4 +211,5 @@ my-store {
   padding: 0px;
   font-size: small;
   height: 16px;
+  align-self: center;
 }
