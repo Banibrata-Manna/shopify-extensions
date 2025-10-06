@@ -569,18 +569,36 @@ document.addEventListener('change', async function(event) {
     if (isProdVariantAvailable) {
       container.style.display = 'block';
       if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
+        container.style.display = 'none';
         resetStoreList();
         // TODO: Check and Update the My Store Pickup Action Here.
         await generateStoreListHTML(container);
         await initializePagination(container);
         if (myStorePickupWrapper) {
           myStorePickupWrapper.style.display = 'block';
+          const storeCode = myStorePickupWrapper.querySelector('.hc-pc-mystore-pickup')?.id;
+          storesWithInventory = await filterStoresByInventoryAvailability([ { storeCode: storeCode } ], selectedProductVariant?.sku);
+          const myStorePickupBtn = myStorePickupWrapper.querySelector('.pickup-btn');
+          if (storesWithInventory && storesWithInventory.length > 0) {
+            if (!myStorePickupBtn) {
+              const properties = {
+                "_pickupstore": storeCode
+              }
+              const myStorePickupBtn = createPickupHereButton(properties);
+              myStorePickupBtn.classList.add('pickup-btn');
+              myStorePickupWrapper.querySelector('.hc-pc-mystore-pickup').appendChild(myStorePickupBtn);
+            }
+          } else {
+            myStorePickupBtn?.remove();
+          }
         }
         if (showAndHideStoresBtn) {
           showAndHideStoresBtn.style.display = 'block';
+          showAndHideStoresBtn.dataset.showStores = 'false';
+          showAndHideStoresBtn.textContent = localStorage.getItem("defaultStore") ? 'CHECK OTHER STORES' : 'SHOW PICKUP STORES';
         }
       }
-      paginationElement.style.display = 'flex';
+      paginationElement.style.display = 'none';
     } else {
       resetStoreList();
       container.style.display = 'none';
