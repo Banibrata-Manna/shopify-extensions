@@ -1,7 +1,9 @@
-<div id="hc-pc-my-store">
-    <span style="font-weight: bold;">
-        My Store: 
-    </span>
+<div id="hc-pc-my-store" data-store-selector-display='{{ storeSelectorDisplay }}'>
+    {%- if mode == 'inline' -%}
+        <span style="font-weight: bold;">
+            My Store: 
+        </span>
+    {%- endif -%}
 </div>
 {% render 'storeListPagination' mode: {{ mode }} %}
 <div id="store-list"
@@ -15,7 +17,7 @@
     data-pickup-item-property='{{ pickupItemProperty }}'
     data-pickup-item-property-label='{{ pickupItemPropertyLabel }}'
     data-show-out-of-stock-stores='{{ showOutOfStockStores }}'
-    data-include-warehouse='{{ includeWarehouse }}'
+    data-enable-warehouse-pickup='{{ includeWarehouse }}'
     data-hc-variants='{{ product.variants | json }}'
     data-show-home-store-in-search='{{ showHomeStoreInSearch }}'>
 </div>
