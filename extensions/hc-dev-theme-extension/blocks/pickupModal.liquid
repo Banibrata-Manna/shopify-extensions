@@ -34,7 +34,7 @@
         if (pickLocation) {
           resetStoreList();
           const container = document.getElementById('store-list');
-          container.dataset.point = '';
+          storeListProperties.point = '';
           generateStoreListHTML(container);
           initializePagination(container);
           locationIcon.dataset.picklocation = 'false';

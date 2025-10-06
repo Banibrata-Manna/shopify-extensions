@@ -1,20 +1,26 @@
 let PRODUCT_VARIANTS = [];
 
-let PICKUP_STORES = [];
+let pickupStores = [];
 
-const PICKUP_TODAY_BTN = document.getElementById('pickup-today-btn');
+const pickupBlockBtn = document.getElementById('pickup-today-btn');
 
-const STORE_LIST = document.getElementById('store-list');
+const storeListElement = document.getElementById('store-list');
 
-const STORE_LIST_PAGINATION = document.getElementById('pagination');
+const paginationElement = document.getElementById('pagination');
+
+var selectedProductVariant;
+
+var pickupBlockSettings = {};
+
+var myStoreBlockSettings = {};
+
+var storeListProperties = {};
 
 async function fetchProductVariantById(shopifyVariantId) {
-  console.log("Fetching variant by ID: ", shopifyVariantId);
   if (!PRODUCT_VARIANTS) {
     console.log("Product Variants not initialized!");
     return null;
   }
-  console.log("Available Product Variants: ", PRODUCT_VARIANTS);
   const variant = PRODUCT_VARIANTS.find(variant => variant.id == shopifyVariantId);
   return variant;
 }
@@ -162,10 +168,12 @@ async function searchStoresByLocation(lat, lon) {
   if (!lat || !lon) {
     return;
   }
-  const storeListContainer = STORE_LIST;
+  const storeListContainer = storeListElement;
   if (!storeListContainer) return;
-  storeListContainer.dataset.point = `${lat},${lon}`;
-  storeListContainer.dataset.viewIndex = 0;
+  // storeListContainer.dataset.point = `${lat},${lon}`;
+  storeListProperties.point = `${lat},${lon}`;
+  // storeListContainer.dataset.viewIndex = 0;
+  storeListProperties.viewIndex = 0;
   await generateStoreListHTML(storeListContainer);
   await initializePagination(storeListContainer);
 }
@@ -199,14 +207,16 @@ function addToCart(currentVariantId, properties, quantity = 1) {
       ]
     })
   })
-  .then(response => response.json())
+  .then(response => {
+    if (response.status !== 200) {
+      throw new Error(response.json().then(err => err.message || 'Error adding to cart'));
+    }
+    return;
+  })
   .then(data => {
     // TODO: Update cart UI
     console.log('Added to cart:', data);
     return fetch('/cart.js');
-  })
-  .then(cart => {
-    window.location.href = '/cart';
   })
   .catch(error => {
     console.log("Error adding to cart:", error);
@@ -256,11 +266,12 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
 }
 
 function createInlineMyStorePickupHead(store, payload) {
+  console.log("Creating My Store Pickup Head Inline Div");
   const myStorePickupWrapper = document.createElement('div');
   myStorePickupWrapper.id = store.storeCode;
-  myStorePickupWrapper.classList.add('hc-pc-ms-inline-div');
+  myStorePickupWrapper.classList.add('hc-pc-mystore-pickup');
 
-  const { enablePickup, isInStock, pickupItemProperty, properties, pickupItemPropertyLabel, productId } = payload;
+  const { isInStock, properties } = payload;
 
   // Clear any previous My Store Details
   myStorePickupWrapper.innerHTML = "";
@@ -270,16 +281,16 @@ function createInlineMyStorePickupHead(store, payload) {
 
   myStorePickupWrapper.appendChild(headingSpan);
 
-  if (enablePickup && isInStock) {
+  if (pickupBlockSettings.enablePickup && isInStock) {
     const myStorePickupBtn = document.createElement('button');
     myStorePickupBtn.textContent = 'PICK UP IN STORE';
     myStorePickupBtn.classList.add('pickup-btn');
 
-    myStorePickupBtn.addEventListener('click', () => {
-      if (pickupItemProperty) {
-        (store.city || store.address1 || store.storeName) ? properties[pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
+    myStorePickupBtn.addEventListener('click', (event) => {
+      if (pickupBlockSettings.pickupItemProperty) {
+        (store.city || store.address1 || store.storeName) ? properties[pickupBlockSettings.pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
       }
-      addToCart(Number(productId), properties);
+      addToCart(Number(selectedProductVariant?.id), properties);
     });
 
     myStorePickupWrapper.appendChild(myStorePickupBtn);
@@ -295,7 +306,7 @@ function createPickupStoreDiv (store, payload) {
     return;
   }
 
-  const { enablePickup, isInStock, pickupItemProperty, properties, pickupItemPropertyLabel, productId, storeSelectorDisplay } = payload;
+  const { isInStock, properties } = payload;
 
   const newStoreDiv = document.createElement('div');
   newStoreDiv.classList.add('store');
@@ -324,8 +335,8 @@ function createPickupStoreDiv (store, payload) {
   const stockDetailText = document.createElement('span');
   const stockDetailIcon = document.createElement('img');
   stockDetailIcon.classList.add('hc-icon');
-  stockDetailIcon.src = enablePickup && isInStock ? '../assets/CheckIcon.svg' : '../assets/XSmallIcon.svg';
-  stockDetailText.textContent = enablePickup && isInStock ? 'In Stock' : 'Out of Stock';
+  stockDetailIcon.src = pickupBlockSettings.enablePickup && isInStock ? '../assets/CheckIcon.svg' : '../assets/XSmallIcon.svg';
+  stockDetailText.textContent = pickupBlockSettings.enablePickup && isInStock ? 'In Stock' : 'Out of Stock';
   stockDetail.append(stockDetailIcon, stockDetailText);
   storeInvContacts.appendChild(stockDetail);
 
@@ -343,7 +354,7 @@ function createPickupStoreDiv (store, payload) {
 
   const storeTimings = getStoreTimings(store);
 
-  if (storeTimings) {
+  if (pickupBlockSettings.showStoreWeeklyTimings && storeTimings) {
     const timingSpan = document.createElement('span');
     const clockIcon = document.createElement('img');
     clockIcon.classList.add('hc-icon');
@@ -364,20 +375,20 @@ function createPickupStoreDiv (store, payload) {
 
   pickupStoreWrapperDiv.appendChild(newStoreDiv);
 
-  if (enablePickup && isInStock) {
+  if (pickupBlockSettings.enablePickup && isInStock) {
     const pickupButton = document.createElement('button');
     pickupButton.textContent = 'PICK UP IN STORE';
     pickupButton.classList.add('pickup-btn');
-    if (storeSelectorDisplay === 'inline') {
+    if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
       storeInvContacts.appendChild(pickupButton);
     } else {
       pickupStoreWrapperDiv.appendChild(pickupButton);
     }
-    pickupButton.addEventListener('click', () => {
-      if (pickupItemProperty) {
-        (store.city || store.address1 || store.storeName) ? properties[pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
+    pickupButton.addEventListener('click', (event) => {
+      if (pickupBlockSettings.pickupItemProperty) {
+        (store.city || store.address1 || store.storeName) ? properties[pickupBlockSettings.pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
       }
-      addToCart(Number(productId), properties);
+      addToCart(Number(selectedProductVariant?.id), properties);
     });
   }
   return pickupStoreWrapperDiv;
@@ -385,35 +396,28 @@ function createPickupStoreDiv (store, payload) {
 
 async function generateStoreListHTML(container) {
   if (!container) return;
-  const enablePickup = container.dataset.showPickupHere === 'true';
-
   // Clear any previous store listings
   container.innerHTML = '';
 
-  console.log("This is the point: ", container.dataset.point);
-  const pickupItemProperty = container.dataset.pickupItemProperty === 'true';
-  const pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
-  const showOutOfStockStores = container.dataset.showOutOfStockStores === 'true';
-  const showHomeStoreInSearch = container.dataset.showHomeStoreInSearch === 'true';
+  console.log("This is the point: ", storeListProperties.point);
 
-
-  const viewIndex = container.dataset.viewIndex;
-  const maxStoresToShow = parseInt(container.dataset.maxStoresDisplay, 10) || 5;
-  const response = await getStores(maxStoresToShow, viewIndex, container.dataset.point, container.dataset.storeProximity, container.dataset.includeWarehouse);
+  const viewIndex = storeListProperties.viewIndex; //container.dataset.viewIndex;
+  const maxStoresToShow = pickupBlockSettings.viewSize;
+  const response = await getStores(maxStoresToShow, viewIndex, storeListProperties.point, pickupBlockSettings.storeProximity, pickupBlockSettings.enableWarehousePickup);
   const stores = response.stores;
   const totalStores = response.totalStores;
-  container.dataset.totalPages = Math.ceil(totalStores / maxStoresToShow);
-  console.log("This is number of total pages: ", container.dataset.totalPages);
+  storeListProperties.totalStores = totalStores;
+  storeListProperties.totalPages = Math.ceil(totalStores / maxStoresToShow);
 
   if (!totalStores) {
     container.innerHTML = '<p style="text-align: center;">No stores found</p>';
-      STORE_LIST_PAGINATION.style.display = 'none';
+      paginationElement.style.display = 'none';
     return;
   }
 
-  STORE_LIST_PAGINATION.style.display = 'flex';
+  paginationElement.style.display = 'flex';
 
-  const storesWithInventory = await filterStoresByInventoryAvailability(stores, container.dataset.productSku);
+  const storesWithInventory = await filterStoresByInventoryAvailability(stores, selectedProductVariant?.sku);
   console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory);
 
   let myStore = localStorage.getItem("defaultStore");
@@ -423,7 +427,8 @@ async function generateStoreListHTML(container) {
 
   stores.forEach(store => {
 
-    if (!showHomeStoreInSearch && myStore && store.storeCode === myStore.storeCode) {
+    console.log("This is show home store in search setting: ", pickupBlockSettings.showHomeStoreInSearch, " and my store: ", myStore, " and current store: ", store);
+    if (!pickupBlockSettings.showHomeStoreInSearch && myStore && store.storeCode === myStore.storeCode) {
       return;
     }
 
@@ -432,13 +437,8 @@ async function generateStoreListHTML(container) {
     };
 
     const payload = {
-      pickupItemProperty: pickupItemProperty,
-      pickupItemPropertyLabel: pickupItemPropertyLabel,
-      enablePickup: enablePickup,
       isInStock: storesWithInventory?.includes(store.storeCode),
       properties: properties,
-      productId: Number(container.dataset.productId),
-      storeSelectorDisplay: container.dataset.storeSelectorDisplay
     }
 
     const newStoreDiv = createPickupStoreDiv(store, payload);
@@ -450,36 +450,53 @@ async function generateStoreListHTML(container) {
   });
 }
 
+function initPickupSettingData (dataset) {
+  pickupBlockSettings.enablePickup = dataset.showPickupHere === 'true';
+  pickupBlockSettings.storeSelectorDisplay = dataset.storeSelectorDisplay;
+  pickupBlockSettings.viewSize = Number(dataset.maxStoresDisplay);
+  pickupBlockSettings.storeProximity = Number(dataset.storeProximity);
+  pickupBlockSettings.pickupItemProperty = dataset.pickupItemProperty === 'true';
+  pickupBlockSettings.pickupItemPropertyLabel = dataset.pickupItemPropertyLabel;
+  pickupBlockSettings.hcPickupProperty = '_pickupstore';
+  pickupBlockSettings.enableWarehousePickup = dataset.enableWarehousePickup === 'true';
+  pickupBlockSettings.showHomeStoreInSearch = dataset.showHomeStoreInSearch === 'true';
+  pickupBlockSettings.showStoreWeeklyTimings = dataset.showStoreWeeklyTimings === 'true';
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
-  let container = PICKUP_TODAY_BTN || STORE_LIST;
+  let container = pickupBlockBtn || storeListElement;
 
   if (container) {
+    initPickupSettingData(container.dataset);
+
+    console.log("These are pickup settings: ", pickupBlockSettings);
+
     let isProdVariantAvailable = false;
     PRODUCT_VARIANTS = JSON.parse(container.dataset.hcVariants);
-    if (PRODUCT_VARIANTS) {
+    if (PRODUCT_VARIANTS?.length) {
       isProdVariantAvailable = await isVariantAvailable(container.dataset.productId);
     }
     if (isProdVariantAvailable) {
-      if (container.dataset.storeSelectorDisplay === 'inline') {
-        STORE_LIST_PAGINATION.style.display = 'none';
+      selectedProductVariant = await fetchProductVariantById(container.dataset.productId);
+      console.log("This is Selected Variant: ", selectedProductVariant);
+      if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
+        paginationElement.style.display = 'none';
         let myStore = localStorage.getItem("defaultStore");
         const myStorePickupDivWrapper = document.getElementById('hc-pc-my-store');
         const checkOtherStoresBtn = document.createElement('u');
+        checkOtherStoresBtn.id = 'show-inline-stores-btn';
         checkOtherStoresBtn.dataset.showStores = 'false';
         checkOtherStoresBtn.style.cursor = 'pointer';
         if (myStore) {
           myStore = JSON.parse(myStore);
           const payload = {};
-          payload.enablePickup = container.dataset.showPickupHere === 'true';
           payload.productId = container.dataset.productId;
           payload.properties = {
             "_pickupstore": myStore.storeCode
           };
-          payload.pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
-          payload.pickupItemProperty = container.dataset.pickupItemProperty;
-          payload.storeSelectorDisplay = container.dataset.storeSelectorDisplay;
+          payload.storeSelectorDisplay = pickupBlockSettings.storeSelectorDisplay;
 
-          const storesWithInventory = await filterStoresByInventoryAvailability([myStore], container.dataset.productSku);
+          const storesWithInventory = await filterStoresByInventoryAvailability([myStore], selectedProductVariant.sku);
           const isInStock = storesWithInventory && storesWithInventory.includes(myStore.storeCode);
           console.log("Does My Store has Inventory: ", isInStock);
           payload.isInStock = isInStock;
@@ -496,15 +513,16 @@ document.addEventListener('DOMContentLoaded', async function () {
           if (checkOtherStoresBtn.dataset.showStores === 'false') {
             checkOtherStoresBtn.dataset.showStores = 'true';
             checkOtherStoresBtn.textContent = 'HIDE STORES';
-            container.dataset.viewIndex = 0;
+            // container.dataset.viewIndex = 0;
+            storeListProperties.viewIndex = 0;
             container.style.display = 'block';
-            STORE_LIST_PAGINATION.style.display = 'flex';
+            paginationElement.style.display = 'flex';
             await generateStoreListHTML(container);
             await initializePagination(container);
           } else {
             resetStoreList();
             container.style.display = 'none';
-            STORE_LIST_PAGINATION.style.display = 'none';
+            paginationElement.style.display = 'none';
             checkOtherStoresBtn.dataset.showStores = 'false';
             checkOtherStoresBtn.textContent = localStorage.getItem("defaultStore") ? 'CHECK OTHER STORES' : 'SHOW PICKUP STORES';
           }
@@ -514,47 +532,68 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     } else {
       container.style.display = 'none';
-      STORE_LIST_PAGINATION.style.display = 'none';
+      paginationElement.style.display = 'none';
     }
   }
 });
 
 document.addEventListener('change', async function(event) {
+  if (event?.target?.name === 'quantity') {
+    return;
+  }
   // TODO: Find a way to get the selected variant's SKU, either save it on the very start.
   const selectedVariantId = event?.target?.defaultValue; // This is only the variant ID
-  const container = PICKUP_TODAY_BTN || STORE_LIST;
+  const container = pickupBlockBtn || storeListElement;
+
+  console.log('Variant Changed Event Triggered: ', event);
 
   if (container && selectedVariantId) {
     const selectedVariant = await fetchProductVariantById(selectedVariantId);
 
-    if (PICKUP_TODAY_BTN) {
-      PICKUP_TODAY_BTN.dataset.productId = selectedVariant?.id;
-      PICKUP_TODAY_BTN.dataset.productSku = selectedVariant?.sku;
-      PICKUP_TODAY_BTN.dataset.productTitle = selectedVariant?.title;
+    selectedProductVariant = selectedVariant;
+
+    if (pickupBlockBtn) {
+      pickupBlockBtn.dataset.productId = selectedVariant?.id;
+      pickupBlockBtn.dataset.productSku = selectedVariant?.sku;
+      pickupBlockBtn.dataset.productTitle = selectedVariant?.title;
     }
     
-    STORE_LIST.dataset.productId = selectedVariant?.id;
-    STORE_LIST.dataset.productSku = selectedVariant?.sku;
-    STORE_LIST.dataset.productTitle = selectedVariant?.title;
+    storeListElement.dataset.productId = selectedVariant?.id;
+    storeListElement.dataset.productSku = selectedVariant?.sku;
+    storeListElement.dataset.productTitle = selectedVariant?.title;
 
     const isProdVariantAvailable = await isVariantAvailable(selectedVariant?.id);
 
+    const myStorePickupWrapper = document.querySelector('#hc-pc-my-store[data-store-selector-display="inline"]');
+
+    const showAndHideStoresBtn = document.querySelector('#show-inline-stores-btn');
+
     if (isProdVariantAvailable) {
       container.style.display = 'block';
-      if (container.dataset.storeSelectorDisplay === 'inline') {
+      if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
         resetStoreList();
         // TODO: Check and Update the My Store Pickup Action Here.
         await generateStoreListHTML(container);
         await initializePagination(container);
+        if (myStorePickupWrapper) {
+          myStorePickupWrapper.style.display = 'block';
+        }
+        if (showAndHideStoresBtn) {
+          showAndHideStoresBtn.style.display = 'block';
+        }
       }
-      STORE_LIST_PAGINATION.style.display = 'flex';
+      paginationElement.style.display = 'flex';
     } else {
       resetStoreList();
       container.style.display = 'none';
-      STORE_LIST_PAGINATION.style.display = 'none';
+      paginationElement.style.display = 'none';
       const myStorePickupDivWrapper = document.querySelector('#hc-pc-my-store');
       if (myStorePickupDivWrapper) {
         myStorePickupDivWrapper.style.display = 'none';
+      }
+
+      if (showAndHideStoresBtn) {
+        showAndHideStoresBtn.style.display = 'none';
       }
     }
   }
@@ -566,19 +605,19 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pi
 
   modal.style.display = 'block';
 
-  const container = STORE_LIST;
+  const container = storeListElement;
   if (!container) return;
 
   // TODO: These need to set while rendering the app-embed block instead
-  container.dataset.showPickupHere = enablePickup;
-  container.dataset.maxStoresDisplay = maxStoresToShow;
-  container.dataset.viewIndex = 0;
-  container.dataset.storeSelectorDisplay = 'modal';
-  container.dataset.storeProximity = storeProximity;
-  container.dataset.pickupItemProperty = pickupItemProperty;
-  container.dataset.pickupItemPropertyLabel = pickupItemPropertyLabel;
-  container.dataset.showOutOfStockStores = showOutOfStockStores;
-  container.dataset.includeWarehouse = includeWarehouse;
+  // container.dataset.showPickupHere = enablePickup;
+  // container.dataset.maxStoresDisplay = maxStoresToShow;
+  // // container.dataset.viewIndex = 0;
+  storeListProperties.viewIndex = 0;
+  // container.dataset.storeSelectorDisplay = 'modal';
+  // container.dataset.storeProximity = storeProximity;
+  // container.dataset.pickupItemProperty = pickupItemProperty;
+  // container.dataset.pickupItemPropertyLabel = pickupItemPropertyLabel;
+  // container.dataset.includeWarehouse = includeWarehouse;
 
   let myStore = localStorage.getItem("defaultStore");
   if (myStore) {
@@ -590,13 +629,9 @@ async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pi
       prevStoreDiv.remove();
     }
     const payload = {};
-    payload.enablePickup = container.dataset.showPickupHere === 'true';
-    payload.productId = container.dataset.productId;
     payload.properties = {
       "_pickupstore": myStore.storeCode
     };
-    payload.pickupItemPropertyLabel = container.dataset.pickupItemPropertyLabel;
-    payload.pickupItemProperty = container.dataset.pickupItemProperty;
 
     const storesWithInventory = await filterStoresByInventoryAvailability([myStore], container.dataset.productSku);
     const isInStock = storesWithInventory && storesWithInventory.includes(myStore.storeCode);
@@ -620,11 +655,12 @@ function makePrevHandler(container) {
     next.disabled = true;
     const prev = document.getElementById('prev-page');
     prev.disabled = true;
-    let currentPage = parseInt(container.dataset.viewIndex, 10);
+    let currentPage = storeListProperties.viewIndex;//parseInt(container.dataset.viewIndex, 10);
     if (currentPage > 0) {
       currentPage--;
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
-      container.dataset.viewIndex = currentPage;
+      // container.dataset.viewIndex = currentPage;
+      storeListProperties.viewIndex = currentPage;
       await generateStoreListHTML(container);
       next.disabled = false;
       prev.disabled = currentPage === 0;
@@ -638,8 +674,8 @@ function makeNextHandler(container) {
     next.disabled = true;
     const prev = document.getElementById('prev-page');
     prev.disabled = true;
-    let currentPage = parseInt(container.dataset.viewIndex, 10);
-    let totalPages = parseInt(container.dataset.totalPages, 10);
+    let currentPage = storeListProperties.viewIndex;//parseInt(container.dataset.viewIndex, 10);
+    let totalPages = storeListProperties.totalPages;
     currentPage++;
     console.log("Total Pages: ", totalPages, " and current page: ", currentPage);
     if (currentPage === totalPages) {
@@ -647,7 +683,8 @@ function makeNextHandler(container) {
     }
     if (currentPage < totalPages) {
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
-      container.dataset.viewIndex = currentPage;
+      // container.dataset.viewIndex = currentPage;
+      storeListProperties.viewIndex = currentPage;
       await generateStoreListHTML(container);
       prev.disabled = false;
       next.disabled = currentPage >= totalPages - 1;
@@ -683,11 +720,13 @@ function closePickupModal() {
 
 
 function resetStoreList() {
-  const container = STORE_LIST;
+  const container = storeListElement;
   if (!container) return;
 
-  container.dataset.viewIndex = 0;
-  container.dataset.point = '';
+  // container.dataset.viewIndex = 0;
+  storeListProperties.viewIndex = 0;
+  // container.dataset.point = '';
+  storeListProperties.point = '';
   container.innerHTML = '';
 
   const pageInfo = document.getElementById('page-info');
