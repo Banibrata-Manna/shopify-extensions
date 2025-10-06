@@ -298,6 +298,21 @@ function createInlineMyStorePickupHead(store, payload) {
   return myStorePickupWrapper;
 }
 
+function createPickupHereButton (properties) {
+  const pickupBtn = document.createElement('button');
+  pickupBtn.textContent = 'PICK UP IN STORE';
+  pickupBtn.classList.add('pickup-btn');
+
+  pickupBtn.addEventListener('click', (event) => {
+    if (pickupBlockSettings.pickupItemProperty) {
+      (store.city || store.address1 || store.storeName) ? properties[pickupBlockSettings.pickupItemPropertyLabel] = [store.storeName, store.address1, store.city].filter(Boolean).join(', ') : '';
+    }
+    addToCart(Number(selectedProductVariant?.id), properties);
+  });
+
+  return pickupBtn;
+}
+
 function createPickupStoreDiv (store, payload) {
 
   console.log("This is store: ", store, " and payload: ", payload);
