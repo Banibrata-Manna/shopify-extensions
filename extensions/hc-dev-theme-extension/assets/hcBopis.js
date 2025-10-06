@@ -1167,6 +1167,67 @@ class MyStoreModal extends HTMLElement {
       }
     }
     this.closeMyStoreModal();
+
+    this.updateMyStoreInPickup(selectedMyStore);
+  }
+
+  async updateMyStoreInPickup (selectedMyStore) {
+
+    if (pickupBlockSettings?.storeSelectorDisplay !== 'inline') {
+      console.log("Pickup Block is not inline, returning...");
+      return;
+    }
+    // Is Theme's maintainer has enabled both Inline Pickup Block and the Pickup Modal Embed Block then get the one Store List which is inline and get it's dataset.
+    let storeListElement = document.querySelector('#store-list[data-store-selector-display="inline"]');
+
+    // It is possible that the my Store is being updated on other page than PDP, in case we don't 
+    if (!storeListElement) {
+      console.warn('No Store List Elements found!');
+      return;
+    }
+
+    console.log("These are store list: ", storeListElement.dataset);
+
+    // Extension running when pickup is in Modal Store Selector Display.
+    if (!storeListElement) {
+      console.log('Inline Store List not Found');
+      return;
+    }
+
+    const storesWithInventory = await filterStoresByInventoryAvailability([selectedMyStore], selectedProductVariant?.sku);
+
+    console.log("Does My Store has Inventory : ", storesWithInventory);
+
+    const isInStock = storesWithInventory.length ? true : false;
+
+    const payload = {
+      isInStock: isInStock,
+      properties: {
+        "_pickupstore": selectedMyStore.storeCode
+      }
+    }
+
+    const newMyStoreDiv = createInlineMyStorePickupHead(selectedMyStore, payload);
+
+    const myStorePickupWrapper = document.querySelector('#hc-pc-my-store');
+    const myStoreDiv = myStorePickupWrapper.querySelector('.hc-pc-mystore-pickup');
+
+
+    const showAndHideStoresBtn = document.querySelector('#show-inline-stores-btn');
+    console.log("This is show and hide stores button", showAndHideStoresBtn);
+    showAndHideStoresBtn.dataset.showStores = 'false';
+    showAndHideStoresBtn.textContent = 'CHECK OTHER STORES';
+    paginationElement.style.display = 'none';
+    storeListElement.style.display = 'none';
+    resetStoreList();
+
+    if (myStoreDiv) {
+      myStorePickupWrapper.replaceChild(newMyStoreDiv, myStoreDiv);
+      return;
+    }
+    myStorePickupWrapper.appendChild(newMyStoreDiv);
+    myStorePickupWrapper.style.display = 'block';
+    
   }
 
   async getStoresByCurrentLocation () {
