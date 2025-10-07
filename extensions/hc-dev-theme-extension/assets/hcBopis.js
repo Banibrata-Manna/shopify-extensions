@@ -546,7 +546,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 document.addEventListener('change', async function(event) {
-  if (event?.target?.name === 'quantity') {
+  // TODO: Remove this with the standard event listener once available.
+  if (event.target.className !== 'product-variant-id') {
     return;
   }
   // TODO: Find a way to get the selected variant's SKU, either save it on the very start.
