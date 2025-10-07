@@ -188,6 +188,10 @@ async function searchStoresByZip(zipcode) {
     console.error("Empty Input");
     return;
   }
+  const modal = document.querySelector('#pickup-modal-embed');
+  const locationIcon = modal.querySelector('#hc-location-icon');
+  locationIcon.dataset.picklocation = 'false';
+  locationIcon.src = '../assets/LocationIcon.svg';
   const { lat, lon } = await getLatLon(zipcode);
   await searchStoresByLocation(lat, lon);
 }
