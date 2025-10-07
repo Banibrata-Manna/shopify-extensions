@@ -50,14 +50,6 @@
         locationIcon.src = '{{ 'LocationFilledIcon.svg' | asset_url }}';
       } catch (error) {
         console.error("Error in Searching stores by current location");
-        // reset the location icons state to what it was.
-        if (pickLocation) {
-          locationIcon.dataset.picklocation = 'false';
-          locationIcon.src = '{{ 'LocationIcon.svg' | asset_url }}';
-        } else {
-          locationIcon.dataset.picklocation = 'true';
-          locationIcon.src = '{{ 'LocationFilledIcon.svg' | asset_url }}';
-        }
       }
     });
 </script>
