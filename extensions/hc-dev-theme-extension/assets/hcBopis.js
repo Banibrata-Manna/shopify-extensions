@@ -631,25 +631,19 @@ document.addEventListener('change', async function(event) {
   }
 });
 
-async function showPickupModal(enablePickup, maxStoresToShow, storeProximity, pickupItemProperty, pickupItemPropertyLabel, showOutOfStockStores, includeWarehouse) {
+async function showPickupModal() {
   const modal = document.getElementById('pickup-modal-embed');
   if (!modal) return;
+
+  const inputBar = modal.querySelector('#pickup-modal-zipcode-input');
+  inputBar.placeholder = `Search by zipcode (${pickupBlockSettings.storeProximity} mile radius)`;
 
   modal.style.display = 'block';
 
   const container = storeListElement;
   if (!container) return;
 
-  // TODO: These need to set while rendering the app-embed block instead
-  // container.dataset.showPickupHere = enablePickup;
-  // container.dataset.maxStoresDisplay = maxStoresToShow;
-  // // container.dataset.viewIndex = 0;
   storeListProperties.viewIndex = 0;
-  // container.dataset.storeSelectorDisplay = 'modal';
-  // container.dataset.storeProximity = storeProximity;
-  // container.dataset.pickupItemProperty = pickupItemProperty;
-  // container.dataset.pickupItemPropertyLabel = pickupItemPropertyLabel;
-  // container.dataset.includeWarehouse = includeWarehouse;
 
   let myStore = localStorage.getItem("defaultStore");
   if (myStore) {
