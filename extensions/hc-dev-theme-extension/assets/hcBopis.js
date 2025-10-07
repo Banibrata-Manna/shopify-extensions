@@ -351,6 +351,12 @@ function createPickupStoreDiv (store, payload) {
   stockDetail.append(stockDetailIcon, stockDetailText);
   storeInvContacts.appendChild(stockDetail);
 
+  if (store.dist) {
+    const storeDistance = document.createElement('span');
+    storeDistance.textContent = `${store.dist.toFixed(2)} miles away`;
+    storeDetailDiv.prepend(storeDistance);
+  }
+
   if (store.storePhone) {
     const storePhone = document.createElement('span');
     const phoneIcon = document.createElement('img');
@@ -1074,14 +1080,20 @@ class MyStoreModal extends HTMLElement {
   createStoreDiv(store) {
     const storeName = document.createElement('h3');
     storeName.textContent = store.storeName;
+    storeName.classList.add('store-name');
 
-    const storeAddress = document.createElement('p');
+    const storeAddress = document.createElement('span');
     storeAddress.textContent = store.address1;
 
-    const storeFullAddress = document.createElement('p')
+    const storeFullAddress = document.createElement('span');
     storeFullAddress.textContent = [store.city, store.postalCode, store.countryCode].filter(Boolean).join(', ');
 
     const storeDetails = document.createElement('div');
+    if (store.dist) {
+      const storeDistance = document.createElement('span');
+      storeDistance.textContent = `${store.dist.toFixed(2)} miles away`;
+      storeDetails.appendChild(storeDistance);
+    }
     storeDetails.classList.add('store-details');
     storeDetails.appendChild(storeName);
     storeDetails.appendChild(storeAddress);
