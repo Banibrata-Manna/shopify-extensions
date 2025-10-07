@@ -433,14 +433,10 @@ async function generateStoreListHTML(container) {
   const storesWithInventory = await filterStoresByInventoryAvailability(stores, selectedProductVariant?.sku);
   console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory);
 
-  let myStore = localStorage.getItem("defaultStore");
-  if (myStore) {
-    myStore = JSON.parse(myStore);
-  }
+  let myStore = getMyStore();
 
   stores.forEach(store => {
 
-    console.log("This is show home store in search setting: ", pickupBlockSettings.showHomeStoreInSearch, " and my store: ", myStore, " and current store: ", store);
     if (!pickupBlockSettings.showHomeStoreInSearch && myStore && store.storeCode === myStore.storeCode) {
       return;
     }
@@ -494,14 +490,13 @@ document.addEventListener('DOMContentLoaded', async function () {
       console.log("This is Selected Variant: ", selectedProductVariant);
       if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
         paginationElement.style.display = 'none';
-        let myStore = localStorage.getItem("defaultStore");
+        let myStore = getMyStore();
         const myStorePickupDivWrapper = document.getElementById('hc-pc-my-store');
         const checkOtherStoresBtn = document.createElement('u');
         checkOtherStoresBtn.id = 'show-inline-stores-btn';
         checkOtherStoresBtn.dataset.showStores = 'false';
         checkOtherStoresBtn.style.cursor = 'pointer';
         if (myStore) {
-          myStore = JSON.parse(myStore);
           const payload = {};
           payload.productId = container.dataset.productId;
           payload.properties = {
@@ -646,9 +641,8 @@ async function showPickupModal() {
 
   storeListProperties.viewIndex = 0;
 
-  let myStore = localStorage.getItem("defaultStore");
+  let myStore = getMyStore();
   if (myStore) {
-    myStore = JSON.parse(myStore);
     const myStorePickupDivWrapper = document.getElementById('hc-pc-my-store');
     // Remove Previous My Store Listing, if the My Store isn't Changed
     const prevStoreDiv = myStorePickupDivWrapper.querySelector('.pickup-store-wrapper');
@@ -810,8 +804,8 @@ class MyStore extends HTMLElement {
   async getCustomerDefaultStore() {
     try {
       if (!this.dataset.customerId) {
-        const store = localStorage.getItem("defaultStore");
-        return store ? JSON.parse(store) : undefined;
+        const store = getMyStore();
+        return store;
       }
       const response = await fetch(
         `https://dev-oms.hotwax.io/api/getShopifyCustomerDefaultStore?customerId=${this.dataset.customerId}&shopifyShopId=${this.dataset.storeId}`
@@ -917,7 +911,7 @@ class MyStoreModal extends HTMLElement {
       const stores = response?.stores;
 
       const modal = this.querySelector('#mystore-modal')
-      const myStore = JSON.parse(localStorage.getItem("defaultStore"));
+      const myStore = getMyStore();
 
       console.log("This is my store", myStore); 
 
@@ -1052,7 +1046,7 @@ class MyStoreModal extends HTMLElement {
 
     const storeListDiv = document.createElement('div');
     storeListDiv.classList.add('hc-store-list');
-    const myStore = JSON.parse(localStorage.getItem("defaultStore"));
+    const myStore = getMyStore();
     const modal = this.querySelector("#mystore-modal");
     stores.forEach(store => {
       const showHomeStoreInSearch = this.dataset.showHomeStoreInSearch === 'true';
@@ -1139,7 +1133,7 @@ class MyStoreModal extends HTMLElement {
       storeContacts.appendChild(timingSpan);
     }
 
-    const myStore = JSON.parse(localStorage.getItem("defaultStore"));
+    const myStore = getMyStore();
 
     // If customer has no default store
     // If store being added to list is not my store
@@ -1203,7 +1197,7 @@ class MyStoreModal extends HTMLElement {
     
     // Save the prevMyStore before updating the my Store in the localstorage
     // If no store was selected then set it as previous store.
-    const prevMyStore = JSON.parse(localStorage.getItem("defaultStore")) || selectedMyStore;
+    const prevMyStore = getMyStore() || selectedMyStore;
     localStorage.setItem("defaultStore", JSON.stringify(selectedMyStore));
     const storeListDiv = this.querySelector('.hc-store-list');
 
