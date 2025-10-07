@@ -589,7 +589,8 @@ document.addEventListener('change', async function(event) {
         // TODO: Check and Update the My Store Pickup Action Here.
         await generateStoreListHTML(container);
         await initializePagination(container);
-        if (myStorePickupWrapper) {
+        const myStore = getMyStore();
+        if (myStore && myStorePickupWrapper) {
           myStorePickupWrapper.style.display = 'block';
           const storeCode = myStorePickupWrapper.querySelector('.hc-pc-mystore-pickup')?.id;
           storesWithInventory = await filterStoresByInventoryAvailability([ { storeCode: storeCode } ], selectedProductVariant?.sku);
