@@ -282,14 +282,14 @@ function createInlineMyStorePickupHead(store, payload) {
   myStorePickupWrapper.appendChild(headingSpan);
 
   if (pickupBlockSettings.enablePickup && isInStock) {
-    const myStorePickupBtn = createPickupHereButton(properties);
+    const myStorePickupBtn = createPickupHereButton(store, properties);
 
     myStorePickupWrapper.appendChild(myStorePickupBtn);
   }
   return myStorePickupWrapper;
 }
 
-function createPickupHereButton (properties) {
+function createPickupHereButton (store, properties) {
   const pickupBtn = document.createElement('button');
   pickupBtn.textContent = 'PICK UP IN STORE';
   pickupBtn.classList.add('pickup-btn');
@@ -382,7 +382,7 @@ function createPickupStoreDiv (store, payload) {
   pickupStoreWrapperDiv.appendChild(newStoreDiv);
 
   if (pickupBlockSettings.enablePickup && isInStock) {
-    const pickupButton = createPickupHereButton(properties);
+    const pickupButton = createPickupHereButton(store, properties);
     if (pickupBlockSettings.storeSelectorDisplay === 'inline') {
       storeInvContacts.appendChild(pickupButton);
     } else {
@@ -584,7 +584,8 @@ document.addEventListener('change', async function(event) {
               const properties = {
                 "_pickupstore": storeCode
               }
-              const myStorePickupBtn = createPickupHereButton(properties);
+              const myStore = getMyStore();
+              const myStorePickupBtn = createPickupHereButton(myStore, properties);
               myStorePickupBtn.classList.add('pickup-btn');
               myStorePickupWrapper.querySelector('.hc-pc-mystore-pickup').appendChild(myStorePickupBtn);
             }
