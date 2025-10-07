@@ -11,14 +11,13 @@
           cursor:pointer;
       ">&times;</button>
     <h2 style="text-align: center;">Pickup Today</h2>
-    <div id="hc-pickup-modal__search" class="hc-modal__search">
+    <form id="hc-pickup-modal__search" class="hc-modal__search" onsubmit="event.preventDefault(); searchStoresByZip(document.getElementById('pickup-modal-zipcode-input').value);">
       <div class="hc-input-wrapper">
         <input id="pickup-modal-zipcode-input" type="text" placeholder="Enter zipcode">
         <img id="hc-location-icon" src="{{ 'LocationIcon.svg' | asset_url }}" alt="Location Icon" height="20px" width="20px" data-picklocation="false">
       </div>
-      <button class="hc-modal-find-stores-btn" onclick="searchStoresByZip(document.getElementById('pickup-modal-zipcode-input').value)"
-      >Find Stores</button>
-    </div>
+      <button type="submit" class="hc-modal-find-stores-btn">Find Stores</button>
+    </form>
     {% render 'store' %}
   </div>
 </div>

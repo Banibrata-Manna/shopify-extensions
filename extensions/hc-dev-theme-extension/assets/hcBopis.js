@@ -943,16 +943,19 @@ class MyStoreModal extends HTMLElement {
       }
 
       this.createStoreList(stores);
+      const myStoreSearchForm =  modal.querySelector('#my-store-search-form');
       const findStoresButton = modal.querySelector('.hc-modal-find-stores-btn');
       const locationIcon = modal.querySelector('#hc-ms-location-icon');
 
-      findStoresButton?.addEventListener('click', async () => {
+      myStoreSearchForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        console.log("New this is new search");
         try {
           // Prevent user to run this more than once simultaneously.
           findStoresButton.disabled = true;
           if (locationIcon.dataset.picklocation === 'true') {
             locationIcon.dataset.picklocation = 'false';
-            locationIcon.src = 'assets/LocationIcon.svg';
+            locationIcon.src = '../assets/LocationIcon.svg';
           }
           const zipCodeInput = this.querySelector('#my-store-modal-zipcode-input').value;
           const storesByZip = await this.getStoresByZip(zipCodeInput);

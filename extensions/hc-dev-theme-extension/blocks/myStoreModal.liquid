@@ -18,14 +18,14 @@
           font-size:2rem;
           cursor:pointer;
       ">&times;</button>
-    <div class="hc-modal__search">
+    <form id="my-store-search-form" class="hc-modal__search">
       <div class="hc-input-wrapper">
         <input id="my-store-modal-zipcode-input" type="text" placeholder="Enter zipcode">
         <img id="hc-ms-location-icon" src="{{ 'LocationIcon.svg' | asset_url }}" alt="Location Icon" height="20" width="20" data-picklocation="false">
       </div>
-      <button class="hc-modal-find-stores-btn"
+      <button type="submit" class="hc-modal-find-stores-btn"
       >Find Stores</button>
-    </div>
+    </form>
   </div>
 </my-store-modal>
 {% schema %}
