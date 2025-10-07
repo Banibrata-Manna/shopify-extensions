@@ -16,6 +16,11 @@ var myStoreBlockSettings = {};
 
 var storeListProperties = {};
 
+function getMyStore () {
+  const myStore = localStorage.getItem("defaultStore");
+  return myStore ? JSON.parse(myStore) : null;
+}
+
 async function fetchProductVariantById(shopifyVariantId) {
   if (!PRODUCT_VARIANTS) {
     console.log("Product Variants not initialized!");
