@@ -721,6 +721,13 @@ function makeNextHandler(container) {
 
 async function initializePagination(container) {
   if (!container) return;
+  if (container._prevHandler) {
+    document.getElementById('prev-page')?.removeEventListener('click', container._prevHandler);
+  }
+  if (container._nextHandler) {
+    document.getElementById('next-page')?.removeEventListener('click', container._nextHandler);
+  }
+
   container._prevHandler = makePrevHandler(container);
   container._nextHandler = makeNextHandler(container);
 
