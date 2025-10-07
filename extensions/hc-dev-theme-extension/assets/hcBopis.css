@@ -1,6 +1,14 @@
+#pickup-today-btn {
+  color: white;
+  background-color: black;
+  text-wrap: nowrap;
+  width: 100%;
+}
+
 .store-name {
   font-weight: lighter;
   padding: 0px;
+  margin: 0px;
 }
 
 #store-list{

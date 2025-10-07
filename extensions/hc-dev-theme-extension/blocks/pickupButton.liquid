@@ -2,14 +2,6 @@
   <button
   id="pickup-today-btn"
   class="btn button"
-  style="
-    background-color: {{ block.settings.background_color }};
-    color: {{ block.settings.text_color }};
-    padding: {{ block.settings.button_padding }};
-    width: {{ block.settings.button_width }};
-    margin: {{ block.settings.button_margin }};
-    text-wrap: nowrap;
-  "
   data-show-pickup-here="{{ block.settings.enable_pick_up }}"
   data-hc-variants='{{ product.variants | json }}'
   data-product-id="{{ product.selected_or_first_available_variant.id }}"
