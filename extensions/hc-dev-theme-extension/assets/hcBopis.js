@@ -1,4 +1,4 @@
-let PRODUCT_VARIANTS = [];
+let productVariants = [];
 
 let pickupStores = [];
 
@@ -22,11 +22,11 @@ function getMyStore () {
 }
 
 async function fetchProductVariantById(shopifyVariantId) {
-  if (!PRODUCT_VARIANTS) {
+  if (!productVariants) {
     console.log("Product Variants not initialized!");
     return null;
   }
-  const variant = PRODUCT_VARIANTS.find(variant => variant.id == shopifyVariantId);
+  const variant = productVariants.find(variant => variant.id == shopifyVariantId);
   return variant;
 }
 
@@ -475,8 +475,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     console.log("These are pickup settings: ", pickupBlockSettings);
 
     let isProdVariantAvailable = false;
-    PRODUCT_VARIANTS = JSON.parse(container.dataset.hcVariants);
-    if (PRODUCT_VARIANTS?.length) {
+    productVariants = JSON.parse(container.dataset.hcVariants);
+    if (productVariants?.length) {
       isProdVariantAvailable = await isVariantAvailable(container.dataset.productId);
     }
     if (isProdVariantAvailable) {
