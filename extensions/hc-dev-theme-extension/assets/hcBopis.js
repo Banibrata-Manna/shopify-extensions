@@ -83,8 +83,8 @@ async function getStores(viewSize, viewIndex, point, distance, includeWarehouse,
     });
 
     const data = await response.json();
-    stores = data?.response?.docs || [];
-    totalStores = data?.response?.numFound || 0;
+    stores = data?.docs || [];
+    totalStores = data?.numFound || 0;
   } catch (error) {
     console.error('Error fetching stores:', error);
   }
