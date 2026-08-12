@@ -259,7 +259,7 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
   payload.facilityIds = storeCodes;
   payload.internalNames = [selectedVariantId];
   payload.productStoreId = 'STORE';
-  payload.inventoryGroupId = 'SHOPIFY_1';
+  payload.inventoryGroupId = 'FAC_GRP';
 
   const response = await checkPickupInventory(payload);
 
@@ -407,6 +407,58 @@ function createPickupStoreDiv (store, payload) {
   return pickupStoreWrapperDiv;
 }
 
+// Walks raw store-search pages (0, 1, 2, ...) from the very start, keeping
+// only stores that have BOPIS inventory, until it has accumulated a full UI
+// page (pageSize) at targetPage, or runs out of raw stores.
+//
+// This always restarts from raw page 0 rather than resuming from a cached
+// cursor, per team decision to keep state simple (no client-side page
+// cache) even though it means "previous" re-does work it already did once.
+//
+// NOTE: the store-search API's viewIndex pagination is not a frozen
+// snapshot. If store/inventory data changes between two of these walks
+// (e.g. between paging forward and later paging back), a store could in
+// rare cases show up on two pages or drop out of the list entirely. This is
+// accepted as a rare, self-healing edge case (a fresh search reconciles it)
+// rather than guarded against here.
+async function buildFilteredStorePage(targetPage, pageSize) {
+  let rawViewIndex = 0;
+  let uiPage = 0;
+  let pageStores = [];
+
+  while (true) {
+    const response = await getStores(pageSize, rawViewIndex, storeListProperties.point, pickupBlockSettings.storeProximity, pickupBlockSettings.enableWarehousePickup);
+    const rawStores = response.stores;
+    const totalRawStores = response.totalStores;
+
+    if (!rawStores.length) {
+      return { pageStores: pageStores.slice(0, pageSize), hasNextPage: false };
+    }
+
+    const storesWithInventory = await filterStoresByInventoryAvailability(rawStores, selectedProductVariant?.sku);
+    const qualifyingStores = rawStores.filter(store => storesWithInventory.includes(store.storeCode));
+
+    pageStores.push(...qualifyingStores);
+
+    while (pageStores.length >= pageSize && uiPage < targetPage) {
+      pageStores.splice(0, pageSize);
+      uiPage++;
+    }
+
+    const noMoreRawStores = (rawViewIndex + 1) * pageSize >= totalRawStores;
+
+    if (uiPage === targetPage && pageStores.length >= pageSize) {
+      return { pageStores: pageStores.slice(0, pageSize), hasNextPage: pageStores.length > pageSize || !noMoreRawStores };
+    }
+
+    if (noMoreRawStores) {
+      return { pageStores: uiPage === targetPage ? pageStores : [], hasNextPage: false };
+    }
+
+    rawViewIndex++;
+  }
+}
+
 async function generateStoreListHTML(container) {
   if (!container) return;
   // Clear any previous store listings
@@ -414,23 +466,43 @@ async function generateStoreListHTML(container) {
 
   console.log("This is the point: ", storeListProperties.point);
 
-  const viewIndex = storeListProperties.viewIndex; //container.dataset.viewIndex;
+  const targetPage = storeListProperties.viewIndex; //container.dataset.viewIndex;
   const maxStoresToShow = pickupBlockSettings.viewSize;
-  const response = await getStores(maxStoresToShow, viewIndex, storeListProperties.point, pickupBlockSettings.storeProximity, pickupBlockSettings.enableWarehousePickup);
-  const stores = response.stores;
-  const totalStores = response.totalStores;
-  storeListProperties.totalStores = totalStores;
-  storeListProperties.totalPages = Math.ceil(totalStores / maxStoresToShow);
 
-  if (!totalStores) {
-    container.innerHTML = '<p style="text-align: center;">No stores found</p>';
+  let stores;
+  let storesWithInventory;
+
+  if (pickupBlockSettings.showOutOfStockStores) {
+    const response = await getStores(maxStoresToShow, targetPage, storeListProperties.point, pickupBlockSettings.storeProximity, pickupBlockSettings.enableWarehousePickup);
+    stores = response.stores;
+    const totalStores = response.totalStores;
+    storeListProperties.totalStores = totalStores;
+    storeListProperties.hasNextPage = (targetPage + 1) * maxStoresToShow < totalStores;
+
+    if (!totalStores) {
+      container.innerHTML = '<p style="text-align: center;">No stores found</p>';
       paginationElement.style.display = 'none';
-    return;
+      return;
+    }
+
+    storesWithInventory = await filterStoresByInventoryAvailability(stores, selectedProductVariant?.sku);
+  } else {
+    // Out-of-stock stores are hidden, so a UI page may need multiple raw
+    // fetches to fill out. See buildFilteredStorePage for details/caveats.
+    const built = await buildFilteredStorePage(targetPage, maxStoresToShow);
+    stores = built.pageStores;
+    storesWithInventory = stores.map(store => store.storeCode);
+    storeListProperties.hasNextPage = built.hasNextPage;
+
+    if (targetPage === 0 && !stores.length) {
+      container.innerHTML = '<p style="text-align: center;">No stores found</p>';
+      paginationElement.style.display = 'none';
+      return;
+    }
   }
 
   paginationElement.style.display = 'flex';
 
-  const storesWithInventory = await filterStoresByInventoryAvailability(stores, selectedProductVariant?.sku);
   console.log("Stores fetched: ", stores.length, " and has inventory: ", storesWithInventory);
 
   let myStore = getMyStore();
@@ -457,6 +529,11 @@ async function generateStoreListHTML(container) {
     customLine.classList.add('custom-line');
     container.appendChild(customLine);
   });
+
+  const nextBtn = document.getElementById('next-page');
+  if (nextBtn) nextBtn.disabled = !storeListProperties.hasNextPage;
+  const prevBtn = document.getElementById('prev-page');
+  if (prevBtn) prevBtn.disabled = storeListProperties.viewIndex === 0;
 }
 
 function initPickupSettingData (dataset) {
@@ -470,6 +547,7 @@ function initPickupSettingData (dataset) {
   pickupBlockSettings.enableWarehousePickup = dataset.enableWarehousePickup === 'true';
   pickupBlockSettings.showHomeStoreInSearch = dataset.showHomeStoreInSearch === 'true';
   pickupBlockSettings.showStoreWeeklyTimings = dataset.showStoreWeeklyTimings === 'true';
+  pickupBlockSettings.showOutOfStockStores = dataset.showOutOfStockStores === 'true';
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -683,9 +761,12 @@ function makePrevHandler(container) {
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
       // container.dataset.viewIndex = currentPage;
       storeListProperties.viewIndex = currentPage;
+      // generateStoreListHTML sets prev/next disabled state based on the
+      // freshly fetched page (storeListProperties.hasNextPage).
       await generateStoreListHTML(container);
-      next.disabled = false;
-      prev.disabled = currentPage === 0;
+    } else {
+      prev.disabled = true;
+      next.disabled = !storeListProperties.hasNextPage;
     }
   };
 }
@@ -696,21 +777,18 @@ function makeNextHandler(container) {
     next.disabled = true;
     const prev = document.getElementById('prev-page');
     prev.disabled = true;
-    let currentPage = storeListProperties.viewIndex;//parseInt(container.dataset.viewIndex, 10);
-    let totalPages = storeListProperties.totalPages;
-    currentPage++;
-    console.log("Total Pages: ", totalPages, " and current page: ", currentPage);
-    if (currentPage === totalPages) {
-      next.disabled = true;
+
+    // We can't know the filtered total page count up front, so we rely on
+    // hasNextPage (set by the previous generateStoreListHTML call) rather
+    // than a precomputed totalPages.
+    if (!storeListProperties.hasNextPage) {
+      prev.disabled = storeListProperties.viewIndex === 0;
+      return;
     }
-    if (currentPage < totalPages) {
-      document.getElementById('page-info').textContent = `${currentPage + 1}`;
-      // container.dataset.viewIndex = currentPage;
-      storeListProperties.viewIndex = currentPage;
-      await generateStoreListHTML(container);
-      prev.disabled = false;
-      next.disabled = currentPage >= totalPages - 1;
-    }
+
+    storeListProperties.viewIndex++;
+    document.getElementById('page-info').textContent = `${storeListProperties.viewIndex + 1}`;
+    await generateStoreListHTML(container);
   };
 }
 
