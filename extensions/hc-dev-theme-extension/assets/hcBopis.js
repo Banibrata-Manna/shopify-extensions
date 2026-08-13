@@ -259,7 +259,7 @@ async function filterStoresByInventoryAvailability(stores, selectedVariantId) {
   payload.facilityIds = storeCodes;
   payload.internalNames = [selectedVariantId];
   payload.productStoreId = 'STORE';
-  payload.inventoryGroupId = 'SHOPIFY_1';
+  payload.inventoryGroupId = 'FAC_GRP';
 
   const response = await checkPickupInventory(payload);
 

@@ -20,7 +20,7 @@
   </button>
 {%-  else -%}
   {%- render 'store', 
-    storeSelectorDisplay: block.settings.store_selector_display, enablePickup: block.settings.enable_pick_up, maxStoreDisplay: block.settings.max_store_display, storeProximity: block.settings.store_proximity, pickupItemProperty: block.settings.pickup_item_property, pickupItemPropertyLabel: block.settings.pickup_item_property_label, showOutOfStockStores: block.settings.show_out_of_stock_stores, includeWarehouse: block.settings.enable_pick_up_warehouse, showHomeStoreInSearch: block.settings.show_homestore_search_result, showStoreWeeklyTimings: block.settings.show_store_weekly_timings, mode: 'inline'
+    storeSelectorDisplay: block.settings.store_selector_display, enablePickup: block.settings.enable_pick_up, maxStoreDisplay: block.settings.max_store_display, storeProximity: block.settings.store_proximity, pickupItemProperty: block.settings.pickup_item_property, pickupItemPropertyLabel: block.settings.pickup_item_property_label, showOutOfStockStores: true, includeWarehouse: block.settings.enable_pick_up_warehouse, showHomeStoreInSearch: block.settings.show_homestore_search_result, showStoreWeeklyTimings: block.settings.show_store_weekly_timings, mode: 'inline'
   -%}
 {%- endif -%}
 
@@ -44,13 +44,6 @@
       "type": "number",
       "default": 50,
       "info": "Proximity in miles that will be used when searching for stores, by default there will be no limit on search all the stores will be displayed as search results"
-    },
-    {
-      "label": "Show out of stock stores",
-      "id": "show_out_of_stock_stores",
-      "type": "checkbox",
-      "default": true,
-      "info": "Control whether to display stores with no inventory for an item in the Pickup selection modal"
     },
     {
       "label": "Enable pick up here",
