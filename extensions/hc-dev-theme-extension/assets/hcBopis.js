@@ -365,8 +365,8 @@ function createPickupStoreDiv (store, payload) {
   const stockDetailText = document.createElement('span');
   const stockDetailIcon = document.createElement('img');
   stockDetailIcon.classList.add('hc-icon');
-  stockDetailIcon.src = pickupBlockSettings.enablePickup && isInStock ? '../assets/CheckIcon.svg' : '../assets/XSmallIcon.svg';
-  stockDetailText.textContent = pickupBlockSettings.enablePickup && isInStock ? 'In Stock' : 'Out of Stock';
+  stockDetailIcon.src = isInStock ? '../assets/CheckIcon.svg' : '../assets/XSmallIcon.svg';
+  stockDetailText.textContent = isInStock ? 'In Stock' : 'Out of Stock';
   stockDetail.append(stockDetailIcon, stockDetailText);
   storeInvContacts.appendChild(stockDetail);
 
@@ -472,6 +472,11 @@ async function generateStoreListHTML(container) {
     customLine.classList.add('custom-line');
     container.appendChild(customLine);
   });
+
+  const nextBtn = document.getElementById('next-page');
+  if (nextBtn) nextBtn.disabled = viewIndex + 1 >= storeListProperties.totalPages;
+  const prevBtn = document.getElementById('prev-page');
+  if (prevBtn) prevBtn.disabled = viewIndex === 0;
 }
 
 function initPickupSettingData (dataset) {
@@ -604,7 +609,7 @@ document.addEventListener('change', async function(event) {
         if (myStore && myStorePickupWrapper) {
           myStorePickupWrapper.style.display = 'block';
           const storeCode = myStorePickupWrapper.querySelector('.hc-pc-mystore-pickup')?.id;
-          storesWithInventory = await filterStoresByInventoryAvailability([ { storeCode: storeCode } ], selectedProductVariant?.sku);
+          const storesWithInventory = await filterStoresByInventoryAvailability([ { storeCode: storeCode } ], selectedProductVariant?.sku);
           const myStorePickupBtn = myStorePickupWrapper.querySelector('.pickup-btn');
           if (storesWithInventory && storesWithInventory.length > 0) {
             if (!myStorePickupBtn) {
@@ -699,8 +704,9 @@ function makePrevHandler(container) {
       // container.dataset.viewIndex = currentPage;
       storeListProperties.viewIndex = currentPage;
       await generateStoreListHTML(container);
+    } else {
       next.disabled = false;
-      prev.disabled = currentPage === 0;
+      prev.disabled = true;
     }
   };
 }
@@ -715,16 +721,14 @@ function makeNextHandler(container) {
     let totalPages = storeListProperties.totalPages;
     currentPage++;
     console.log("Total Pages: ", totalPages, " and current page: ", currentPage);
-    if (currentPage === totalPages) {
-      next.disabled = true;
-    }
     if (currentPage < totalPages) {
       document.getElementById('page-info').textContent = `${currentPage + 1}`;
       // container.dataset.viewIndex = currentPage;
       storeListProperties.viewIndex = currentPage;
       await generateStoreListHTML(container);
+    } else {
+      next.disabled = true;
       prev.disabled = false;
-      next.disabled = currentPage >= totalPages - 1;
     }
   };
 }
