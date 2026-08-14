@@ -196,40 +196,55 @@ async function searchStoresByZip(zipcode) {
   await searchStoresByLocation(lat, lon);
 }
 
-function addToCart(currentVariantId, properties, quantity = 1) {
+async function addToCart(currentVariantId, properties, quantity = 1) {
   if (!currentVariantId) {
     alert('No variant selected!');
     return;
   }
-  fetch('/cart/add.js', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      items: [
-        {
-          id: currentVariantId,
-          quantity: quantity,
-          properties: properties
-        }
-      ]
-    })
-  })
-  .then(response => {
-    if (response.status !== 200) {
-      throw new Error(response.json().then(err => err.message || 'Error adding to cart'));
+
+  console.log("Adding to cart:", { currentVariantId, properties, quantity });
+  try {
+    const addResponse = await fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            id: currentVariantId,
+            quantity: quantity,
+            properties: properties
+          }
+        ]
+      })
+    });
+    const addedItem = await addResponse.json();
+    if (!addResponse.ok) {
+      throw new Error(addedItem?.message || 'Error adding to cart');
     }
-    return;
-  })
-  .then(data => {
-    // TODO: Update cart UI
-    console.log('Added to cart:', data);
-    return fetch('/cart.js');
-  })
-  .catch(error => {
+
+    const cartResponse = await fetch('/cart.js');
+    const cart = await cartResponse.json();
+
+    // Public contract for the host theme: listen for 'hc:cart:item-added' on
+    // document to react to a successful pickup add-to-cart (toast, cart icon
+    // refresh, animation, redirect, etc.) without this extension needing to
+    // know the theme's cart UI. detail = { cart, addedItem, properties }
+    // - cart: full parsed /cart.js response (item_count, items, total_price, ...)
+    // - addedItem: parsed /cart/add.js response for the line item just added
+    // - properties: the line item properties passed in (includes _pickupstore)
+    document.dispatchEvent(new CustomEvent('hc:cart:item-added', {
+      detail: { cart, addedItem, properties }
+    }));
+  } catch (error) {
     console.log("Error adding to cart:", error);
-  });
+    // Failure counterpart of 'hc:cart:item-added' above, for the theme to
+    // surface the error to the shopper. detail = { error }
+    document.dispatchEvent(new CustomEvent('hc:cart:item-add-error', {
+      detail: { error }
+    }));
+  }
 }
 
 async function checkPickupInventory(payload) {
