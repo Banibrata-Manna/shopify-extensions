@@ -1,12 +1,5 @@
-<div id="hc-pc-my-store" data-store-selector-display='{{ storeSelectorDisplay }}'>
-    {%- if mode == 'modal' -%}
-        <span style="font-weight: bold;">
-            My Store: 
-        </span>
-    {%- endif -%}
-</div>
-{% render 'storeListPagination' mode: mode %}
-<div id="store-list"
+<hc-pickup-store-list
+    data-mode="{{ mode }}"
     data-store-selector-display='{{ storeSelectorDisplay }}'
     data-show-pickup-here='{{ enablePickup }}'
     data-max-stores-display='{{ maxStoreDisplay }}'
@@ -21,4 +14,13 @@
     data-hc-variants='{{ product.variants | json }}'
     data-show-home-store-in-search='{{ showHomeStoreInSearch }}'
     data-show-store-weekly-timings='{{ showStoreWeeklyTimings }}'>
-</div>
+  <div id="hc-pc-my-store" data-store-selector-display='{{ storeSelectorDisplay }}'>
+      {%- if mode == 'modal' -%}
+          <span style="font-weight: bold;">
+              My Store:
+          </span>
+      {%- endif -%}
+  </div>
+  {% render 'storeListPagination' mode: mode %}
+  <div id="store-list"></div>
+</hc-pickup-store-list>

@@ -1,17 +1,8 @@
-<div id="pickup-modal-embed"  class="hc-modal-embed">
-  <div class="hc-modal">
-    <button onclick="closePickupModal()" 
-      style="
-          position:absolute;
-          top:10px;
-          right:10px;
-          background:none;
-          border:none;
-          font-size:2rem;
-          cursor:pointer;
-      ">&times;</button>
+<hc-pickup-modal id="pickup-modal-embed">
+  <dialog class="hc-pickup-dialog">
+    <button type="button" class="hc-pickup-dialog-close" aria-label="Close">&times;</button>
     <h2 style="text-align: center;">Pickup Today</h2>
-    <form id="hc-pickup-modal__search" class="hc-modal__search" onsubmit="event.preventDefault(); searchStoresByZip(document.getElementById('pickup-modal-zipcode-input').value);">
+    <form id="hc-pickup-modal__search" class="hc-modal__search">
       <div class="hc-input-wrapper">
         <input id="pickup-modal-zipcode-input" type="text" placeholder="Enter zipcode">
         <img id="hc-location-icon" src="{{ 'LocationIcon.svg' | asset_url }}" alt="Location Icon" height="20px" width="20px" data-picklocation="false">
@@ -19,39 +10,8 @@
       <button type="submit" class="hc-modal-find-stores-btn">Find Stores</button>
     </form>
     {% render 'store' mode: 'modal' %}
-  </div>
-</div>
-<script>
-  const locationIcon = document.getElementById('hc-location-icon');
-
-  locationIcon
-    .addEventListener('click', async () => {
-      try {
-        // Clear any previous value from Search Bar
-        document.getElementById('pickup-modal-zipcode-input').value = '';
-        const pickLocation = locationIcon.dataset.picklocation === 'true';
-        if (pickLocation) {
-          resetStoreList();
-          const container = document.getElementById('store-list');
-          storeListProperties.point = '';
-          generateStoreListHTML(container);
-          initializePagination(container);
-          locationIcon.dataset.picklocation = 'false';
-          locationIcon.src = '{{ 'LocationIcon.svg' | asset_url }}';
-          return;
-        }
-        const position = await getCurrentLocation();
-
-        console.log(`Current location - Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`);
-        searchStoresByLocation(position.coords.latitude, position.coords.longitude);
-
-        locationIcon.dataset.picklocation = 'true';
-        locationIcon.src = '{{ 'LocationFilledIcon.svg' | asset_url }}';
-      } catch (error) {
-        console.error("Error in Searching stores by current location:", error);
-      }
-    });
-</script>
+  </dialog>
+</hc-pickup-modal>
 {% schema %}
 {
   "name": "Pickup Modal",

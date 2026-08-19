@@ -1,7 +1,5 @@
 {%- if block.settings.store_selector_display == "modal" -%}
-  <button
-  id="pickup-today-btn"
-  class="btn button"
+  <hc-pickup-button
   data-show-pickup-here="{{ block.settings.enable_pick_up }}"
   data-hc-variants='{{ product.variants | json }}'
   data-product-id="{{ product.selected_or_first_available_variant.id }}"
@@ -14,10 +12,11 @@
   data-enable-warehouse-pickup='{{ block.settings.enable_pick_up_warehouse }}'
   data-store-selector-display='{{ block.settings.store_selector_display }}'
   data-show-home-store-in-search='{{ block.settings.show_homestore_search_result }}'
-  data-show-store-weekly-timings='{{ block.settings.show_store_weekly_timings }}'
-  onclick="showPickupModal()">
-    {{ block.settings.pick_up_button }}
-  </button>
+  data-show-store-weekly-timings='{{ block.settings.show_store_weekly_timings }}'>
+    <button id="pickup-today-btn" type="button" class="btn button">
+      {{ block.settings.pick_up_button }}
+    </button>
+  </hc-pickup-button>
 {%-  else -%}
   {%- render 'store', 
     storeSelectorDisplay: block.settings.store_selector_display, enablePickup: block.settings.enable_pick_up, maxStoreDisplay: block.settings.max_store_display, storeProximity: block.settings.store_proximity, pickupItemProperty: block.settings.pickup_item_property, pickupItemPropertyLabel: block.settings.pickup_item_property_label, showOutOfStockStores: true, includeWarehouse: block.settings.enable_pick_up_warehouse, showHomeStoreInSearch: block.settings.show_homestore_search_result, showStoreWeeklyTimings: block.settings.show_store_weekly_timings, mode: 'inline'
